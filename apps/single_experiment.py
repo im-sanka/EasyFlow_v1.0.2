@@ -2,7 +2,6 @@ from typing import Any
 from typing import Union
 from pandas import DataFrame
 import streamlit
-import pandas
 from apps.render_first_dataframe import first_dataframe
 from apps.render_basic_plots import render_label_based_plot, render_size_signal_plot, render_sizes_plot_histogram, \
     render_signal_plot
@@ -33,7 +32,7 @@ def page():
 
             column1, column2, column3 = streamlit.columns(3)
             threshold = render_threshold(column1, data_frame)
-            column1.warning("This threshold will change the visualization below.")
+            column1.info("This threshold will change the visualization below.")
 
             with streamlit.expander("More information about the threshold", expanded=False):
                 streamlit.write("The threshold will be shown as a red line within figures below. "
