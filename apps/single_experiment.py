@@ -78,7 +78,7 @@ def page():
                 'Polydisperse droplet analysis': ['Size Distribution']
             }
             type_of_column = column1.selectbox("What kind of visualization?", type_module[streamlit.session_state['type']])
-            if type_module is not 'Select here':
+            if type_module:
                 label = data_frame['Label']
 
                 detected_labels, second_dataframe = listing_labels_in_the_dataframe(data_frame, label)

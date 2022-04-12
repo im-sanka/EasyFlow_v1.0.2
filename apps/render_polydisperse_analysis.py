@@ -59,7 +59,8 @@ def render_size_distribution_in_polydisperse_module(data_frame, second_dataframe
         fig8 = pyplot.figure(figsize=(14, 10))
         for r in Kelas:
             d = clas[clas["Class"] == r]
-            d["Viability"] = d["Fraction Positive"] / d.iat[0, 5]
+            d["Viability"] = d["Fraction Positive"] / d.iat[:,5]
+            streamlit.write(d)
             seaborn.lineplot(data=d, x="Label", y="Viability", label=r, alpha=0.1)
         plot = seaborn.lineplot(
             x=second_dataframe["label"],

@@ -47,7 +47,8 @@ def render_label_based_plot(data_frame, threshold):
     with column1.expander("More information about this plot?", expanded=False):
         streamlit.write("This plot groups pixel intensities from the available data. There is a red line which will"
                         "show the threshold.")
-    column2.info("Do not worry about the <NA> or values here. These values will be adjusted once the threshold is determined.")
+    column2.info("Do not worry about the <NA> or weird values here. These values will be adjusted once the threshold is determined.")
+
 def render_size_signal_plot(data_frame, threshold):
     streamlit.subheader("Sizes-Signals Plot")
 

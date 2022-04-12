@@ -13,7 +13,7 @@ def render_required_antibiotic_concentration_range():
         "Since the range of antibiotic concentration is needed, gives the antibiotic concentration range with comma "
         "here:", initial_value
     )
-    ab_input = str(ab_input)[1:-1]
+    #ab_input = str(ab_input)[1:-1]
     streamlit.warning(
         "**IMPORTANT NOTE**: Write the antibiotic concentration separated with comma and put 0.0001 as a control. Put "
         "the list corresponds to the 'Labels' which has listed under your data above. Example: 0.0001, 0.0093,0.0113,"
@@ -25,8 +25,11 @@ def render_required_antibiotic_concentration_range():
 
 def render_growth_heterogeneity_module(ab_input, second_dataframe, type_of_column):
     # This column is needed, otherwise,
+    streamlit.write(second_dataframe)
     column1, column2 = streamlit.columns(2)
     data_frame_growth_heterogeneity = second_dataframe.copy()
+    cek = second_dataframe['label'].squeeze()
+    streamlit.write(cek)
     data_frame_growth_heterogeneity['AB Concentration'] = pandas.Series(ab_input).str.split(
         ',',
         expand=True
@@ -157,6 +160,7 @@ def render_growth_heterogeneity_module(ab_input, second_dataframe, type_of_colum
             pyplot.xlabel('$c \\ [\mu g/ ml] $', rotation=0, fontsize=12)
             # plt.xlim(0.01,0.04)
             # plt.ylim(ymin=-0.02,ymax=1.2)
+            # _set_plot_axis_labels(fig6, '$c \\ [\mu g/ ml] $', 'viability,  $f_+(c)/f_+(0)$', column2, column2, "ghx", "ghy")
             column1.pyplot(fig6)
 
         if type_of_column == "Single cell viability and MIC probability density":
