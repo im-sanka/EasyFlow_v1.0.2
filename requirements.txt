@@ -1,6 +1,6 @@
 bokeh==2.3.3
 matplotlib==3.5.1
-numpy==1.20.3
+numpy<1.21.0
 pandas==1.4.1
 Pillow==9.1.0
 scipy==1.8.0
