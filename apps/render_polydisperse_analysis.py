@@ -44,14 +44,14 @@ def render_size_distribution_in_polydisperse_module(data_frame, second_dataframe
         # posneg['Viability'] = posneg['Fraction Positive']/ posneg.iat[0,4]
         # posneg
 
-        clas = data_frame.groupby(['Label', 'Class', 'Classification']).size().unstack().reset_index()
+        clas = data_frame.groupby(['Tube', 'Class', 'Classification']).size().unstack().reset_index()
         clas['Total'] = clas['Negative'] + clas['Positive']
         clas['Fraction Positive'] = clas['Positive'] / clas['Total']
         # clas = clas[clas["Class"] == 0.001953125]
         # clas
 
         # label n
-        Label = list(clas["Label"])
+        Label = list(clas["Tube"])
         Label = list(dict.fromkeys(Label))
         Kelas = list(clas["Class"])
         Kelas = list(dict.fromkeys(Kelas))
@@ -59,9 +59,8 @@ def render_size_distribution_in_polydisperse_module(data_frame, second_dataframe
         fig8 = pyplot.figure(figsize=(14, 10))
         for r in Kelas:
             d = clas[clas["Class"] == r]
-            d["Viability"] = d["Fraction Positive"] / d.iat[:,5]
-            streamlit.write(d)
-            seaborn.lineplot(data=d, x="Label", y="Viability", label=r, alpha=0.1)
+            d["Viability"] = d["Fraction Positive"] / d.iat[0, 5]
+            seaborn.lineplot(data=d, x="Tube", y="Viability", label=r, alpha=0.3)
         plot = seaborn.lineplot(
             x=second_dataframe["label"],
             y=second_dataframe["Viability"],
@@ -70,7 +69,7 @@ def render_size_distribution_in_polydisperse_module(data_frame, second_dataframe
             linewidth=5
         )
 
-        _set_plot_axis_labels(plot, "Label", "Viability", column2, column2, "keyx", "keyy")
+        _set_plot_axis_labels(plot, "Tube", "Viability", column2, column2, "keyx", "keyy")
 
         leg = pyplot.legend(title="Droplet's Volume")
         leg._legend_box.align = "left"
