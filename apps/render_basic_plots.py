@@ -17,7 +17,7 @@ def render_label_based_plot(data_frame, threshold):
     index_cmap = factor_cmap('Classification', palette=["#119da4", "#ffc857"],
                              factors=sorted(data_frame.Classification.unique()))
 
-    Label = data_frame.Tube.unique()
+    Label = data_frame.Label.unique()
     signalx = column2.text_input("X - axis label:", "Group", key ="label_basedx")
     signaly = column2.text_input("Y - axis label:", "Intensity", key ="label_basedy")
 
@@ -26,7 +26,7 @@ def render_label_based_plot(data_frame, threshold):
                y_axis_label=signaly,
                x_range=Label)
 
-    label_based.scatter(x= jitter('Tube', width=0.6, range=label_based.x_range) ,
+    label_based.scatter(x= jitter('Label', width=0.6, range=label_based.x_range) ,
               y= 'Intensity',
               source=data_frame,
               fill_color=index_cmap,

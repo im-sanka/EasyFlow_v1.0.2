@@ -6,7 +6,7 @@ def first_dataframe(data_frame):
     try:
         data_frame['Intensity'] = data_frame.iloc[:, 2]
         data_frame['Volume'] = data_frame.iloc[:, 1]
-        data_frame['Label'] = data_frame.iloc[:, 0] #First column
+        data_frame['Label'] : str = data_frame.iloc[:, 0] #First column
         #data_frame['Radian'] = data_frame['Diameter'] / 2
         # Spheroid = (4 / 3) * (math.pi * data_frame['Radian'] ** 3) / 1000000
         # Ellipsoid = (4 / 3) * (
@@ -16,7 +16,7 @@ def first_dataframe(data_frame):
     except:
         #streamlit.write(data_frame.columns())
         streamlit.warning("File has different column name, please adjust the table accordingly.")
-
+    streamlit.write(data_frame)
 
         # column1, column2, column3 = streamlit.columns(3)
         # box = list(data_frame.columns)
