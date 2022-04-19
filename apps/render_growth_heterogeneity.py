@@ -29,7 +29,7 @@ def render_growth_heterogeneity_module(ab_input, second_dataframe, type_of_colum
     column1, column2 = streamlit.columns(2)
     data_frame_growth_heterogeneity = second_dataframe.copy()
     cek = second_dataframe['label'].squeeze()
-    streamlit.write(cek)
+    # streamlit.write(cek)
     data_frame_growth_heterogeneity['AB Concentration'] = pandas.Series(ab_input).str.split(
         ',',
         expand=True

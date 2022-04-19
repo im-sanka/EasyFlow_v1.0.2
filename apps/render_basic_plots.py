@@ -39,15 +39,43 @@ def render_label_based_plot(data_frame, threshold):
     label_based.renderers.extend([vline])
 
     label_based.grid.visible = False
-    details = (data_frame[['Label','Classification']]).value_counts().sort_index().unstack().reset_index().rename(columns ={'index': 'Label'})
-    details['Fraction Positive'] = details['Positive']/ (details['Positive'] + details['Negative'])
+    label_data_initial = (data_frame[['Label','Classification']]).value_counts().sort_index().unstack().reset_index().rename(columns ={'index': 'Label'})
+    label_data_initial['Fraction Positive'] = label_data_initial['Positive']/ (label_data_initial['Positive'] + label_data_initial['Negative'])
+    label_data_initial['Total'] = label_data_initial['Positive'] + label_data_initial['Negative']
+    label_data_mean = data_frame.groupby("Label")["Volume"].mean().reset_index().rename(columns ={'index': 'Label', 'Volume':'Vol_Mean'})
+    label_data_all = data_frame.groupby("Label")["Volume"].std().reset_index().rename(columns ={'index': 'Label', 'Volume':'Vol_CV %'})
+    label_data_all['Vol_CV %'] = label_data_all['Vol_CV %'] * 100
+    label_data = label_data_initial.merge(label_data_mean, how='left', on='Label', copy=False)
+    label_data = label_data.merge(label_data_all, how='left', on='Label', copy=False)
+
+
+
+
     column2.write("From the graphs, we can see each values here:")
-    column2.write(details)
+    # column2.write(label_data_initial)
+    # column2.write(label_data_mean)
+    # column2.write(label_data_all)
+    column2.write(label_data)
+    @streamlit.cache
+    def convert_df_to_csv(df):
+        # IMPORTANT: Cache the conversion to prevent computation on every rerun
+        return df.to_csv().encode('utf-8')
+
+    column2.download_button(
+        label="Download data as .CSV",
+        data=convert_df_to_csv(label_data),
+        file_name='large_df.csv',
+        mime='text/csv',
+    )
+    label_based.axis.axis_label_text_font_size = "12pt"
+    label_based.yaxis.major_label_text_font_size = "10pt"
+    label_based.xaxis.major_label_text_font_size = "10pt"
+
     column1.bokeh_chart(label_based, use_container_width=True)
     with column1.expander("More information about this plot?", expanded=False):
         streamlit.write("This plot groups pixel intensities from the available data. There is a red line which will"
                         "show the threshold.")
-    column2.info("Do not worry about the <NA> or weird values here. These values will be adjusted once the threshold is determined.")
+    column1.info("Do not worry about the <NA> or weird values on the table. The values will be adjusted once the threshold is determined.")
 
 def render_size_signal_plot(data_frame, threshold):
     streamlit.subheader("Sizes-Signals Plot")
@@ -76,10 +104,19 @@ def render_size_signal_plot(data_frame, threshold):
     vline = Span(location=threshold, dimension='width', line_color='red', line_width=3, line_dash='dashed')
 
     size_signal_plot.renderers.extend([vline])
-    column1.info("**INFO**: The classification will be conducted based on the threshold input at the beginning.")
+    column1.info("**INFO**: Classification will be performed based on the threshold input.")
     column2.write("Based on the threshold, you have:")
     details = (data_frame['Classification']).value_counts().reset_index().rename(columns = {'index': 'Type'})
+    total = details['Classification'].sum()
+    fraction = details.loc[details['Type'] == "Positive", "Classification"]/total
+    fraction = round(float(fraction.values), 2)
+    size_signal_plot.axis.axis_label_text_font_size = "12pt"
+    size_signal_plot.yaxis.major_label_text_font_size = "12pt"
+    size_signal_plot.xaxis.major_label_text_font_size = "12pt"
     column2.write(details)
+    column2.write("The total droplets within the experiment is {}.".format(total))
+    column2.write("The fraction positive of the experiment is {}.".format(fraction))
+
     size_signal_plot.grid.visible = False
     column1.bokeh_chart(size_signal_plot, use_container_width=True)
     with column2.expander("More information about this plot?", expanded=False):
@@ -93,7 +130,7 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
 
     column1, column2 = streamlit.columns(2)
     default_bin = column1.number_input("How many limits (including 0) do you want to have?", 5)
-
+    # slider = column1.slider("Check slider", 0, max_volume, default_bin)
     initial_value = ", ".join([str(round(bin_value, 5)) for bin_value in numpy.linspace(min_volume, max_volume, default_bin)])
 
     bins_input_field_value: str = column2.text_input(
@@ -124,6 +161,7 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     labels: list[str]
     [bins, labels] = _bin_sizes_input_data_from_user(volume_data_series.to_list())
 
+    # bins_axis = bins.pop(0)
     # Two column layout so that the plot fills only half of the page width
     column1, column2 = streamlit.columns(2)
 
@@ -164,6 +202,10 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     sizes_plot.grid.visible = False
     signal_histogram = signal_histogram.rename(columns=({'arr_signal': 'Count', 'left':'Bin_left', 'right':'Bin_right'}))
     column2.write("Here is the table that sums up the value for each group with group's boundaries.")
+    sizes_plot.axis.axis_label_text_font_size = "12pt"
+    sizes_plot.yaxis.major_label_text_font_size = "12pt"
+    sizes_plot.xaxis.major_label_text_font_size = "12pt"
+    # sizes_plot.xaxis.major_label_overrides = bins_axis[1]
     column2.write(signal_histogram)
 
     column1.bokeh_chart(sizes_plot, use_container_width=True)
@@ -179,11 +221,17 @@ def render_signal_plot(data_frame, threshold):
 
     mini = data_frame['Intensity'].min()
     maxi = data_frame['Intensity'].max()
+    mean = data_frame['Intensity'].mean()
+    mean = round(float(mean))
+    min_volume = 0  # min(volumes)
+    max_volume = maxi
 
-    slide = column2.slider('Adjust your bins by sliding this button:',
-                           0,
-                           len(data_frame['Intensity']),
-                           1000)
+    default_bin = column1.number_input("How many bins do you want to have?", 1000)
+
+    slide = column2.slider('You can also adjust your bins by sliding this button:',
+                               0,
+                               len(data_frame['Intensity']),
+                                default_bin)
 
 
     arr_hist, edges = numpy.histogram(data_frame['Intensity'],
@@ -219,6 +267,9 @@ def render_signal_plot(data_frame, threshold):
         fig_signal.grid.visible = False
         vline = Span(location=threshold, dimension='height', line_color='red', line_width=3, line_dash='dashed')
         fig_signal.renderers.extend([vline])
+        fig_signal.axis.axis_label_text_font_size = "12pt"
+        fig_signal.yaxis.major_label_text_font_size = "12pt"
+        fig_signal.xaxis.major_label_text_font_size = "12pt"
         signals_plot.append(panel)
 
     signal_show = Tabs(tabs=signals_plot)

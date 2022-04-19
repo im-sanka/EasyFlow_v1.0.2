@@ -45,6 +45,7 @@ def page():
             render_sizes_plot_histogram(data_frame)
             render_size_signal_plot(data_frame, threshold)
             render_label_based_plot(data_frame, threshold)
+
         except:
             streamlit.warning("Please adjust the file input accordingly. For further explanation, check the 'Instruction' tab")
 
@@ -98,12 +99,12 @@ def page():
                     if type_of_column == 'Size Distribution':
                         render_size_distribution_in_polydisperse_module(data_frame, second_dataframe)
 
-            streamlit.header("Download data")
+            streamlit.header("Download raw classification data")
             streamlit.write("You can download the data here:")
             column1, column2 = streamlit.columns(2)
 
             column1.write(data_frame)
-            column2.write(second_dataframe)
+            # column2.write(label_data)
 
             @streamlit.cache
             def convert_df_to_csv(df):
@@ -112,18 +113,18 @@ def page():
 
 
             column1.download_button(
-                label="Download data as CSV",
+                label="Download data as .CSV",
                 data=convert_df_to_csv(data_frame),
                 file_name='large_df.csv',
                 mime='text/csv',
             )
 
-            column2.download_button(
-                label="Download data as CSV",
-                data=convert_df_to_csv(second_dataframe),
-                file_name='large_df.csv',
-                mime='text/csv',
-            )
+            # column2.download_button(
+            #     label="Download data as CSV",
+            #     data=convert_df_to_csv(second_dataframe),
+            #     file_name='large_df.csv',
+            #     mime='text/csv',
+            # )
         except:
             streamlit.warning("Please adjust the file input accordingly. For further explanation, check the 'Instruction' tab")
 

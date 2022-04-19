@@ -16,7 +16,7 @@ def first_dataframe(data_frame):
     except:
         #streamlit.write(data_frame.columns())
         streamlit.warning("File has different column name, please adjust the table accordingly.")
-    streamlit.write(data_frame)
+    # streamlit.write(data_frame)
 
         # column1, column2, column3 = streamlit.columns(3)
         # box = list(data_frame.columns)
