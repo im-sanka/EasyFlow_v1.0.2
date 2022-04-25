@@ -17,16 +17,20 @@ def render_label_based_plot(data_frame, threshold):
     index_cmap = factor_cmap('Classification', palette=["#119da4", "#ffc857"],
                              factors=sorted(data_frame.Classification.unique()))
 
+    # Label = data_frame.Label.to_string()
     Label = data_frame.Label.unique()
+
+    #streamlit.write(test)
     signalx = column2.text_input("X - axis label:", "Group", key ="label_basedx")
     signaly = column2.text_input("Y - axis label:", "Intensity", key ="label_basedy")
+
 
     label_based = figure(width=400, height=400,
                x_axis_label=signalx,
                y_axis_label=signaly,
-               x_range=Label)
+               x_range= Label)
 
-    label_based.scatter(x= jitter('Label', width=0.6, range=label_based.x_range) ,
+    label_based.scatter(x= jitter('Label', width=0.6, range=label_based.x_range),
               y= 'Intensity',
               source=data_frame,
               fill_color=index_cmap,
@@ -42,20 +46,12 @@ def render_label_based_plot(data_frame, threshold):
     label_data_initial = (data_frame[['Label','Classification']]).value_counts().sort_index().unstack().reset_index().rename(columns ={'index': 'Label'})
     label_data_initial['Fraction Positive'] = label_data_initial['Positive']/ (label_data_initial['Positive'] + label_data_initial['Negative'])
     label_data_initial['Total'] = label_data_initial['Positive'] + label_data_initial['Negative']
-    label_data_mean = data_frame.groupby("Label")["Volume"].mean().reset_index().rename(columns ={'index': 'Label', 'Volume':'Vol_Mean'})
-    label_data_all = data_frame.groupby("Label")["Volume"].std().reset_index().rename(columns ={'index': 'Label', 'Volume':'Vol_CV %'})
-    label_data_all['Vol_CV %'] = label_data_all['Vol_CV %'] * 100
-    label_data = label_data_initial.merge(label_data_mean, how='left', on='Label', copy=False)
-    label_data = label_data.merge(label_data_all, how='left', on='Label', copy=False)
-
-
-
 
     column2.write("From the graphs, we can see each values here:")
     # column2.write(label_data_initial)
     # column2.write(label_data_mean)
     # column2.write(label_data_all)
-    column2.write(label_data)
+    column2.write(label_data_initial)
     @streamlit.cache
     def convert_df_to_csv(df):
         # IMPORTANT: Cache the conversion to prevent computation on every rerun
@@ -63,7 +59,7 @@ def render_label_based_plot(data_frame, threshold):
 
     column2.download_button(
         label="Download data as .CSV",
-        data=convert_df_to_csv(label_data),
+        data=convert_df_to_csv(label_data_initial),
         file_name='large_df.csv',
         mime='text/csv',
     )
@@ -76,6 +72,7 @@ def render_label_based_plot(data_frame, threshold):
         streamlit.write("This plot groups pixel intensities from the available data. There is a red line which will"
                         "show the threshold.")
     column1.info("Do not worry about the <NA> or weird values on the table. The values will be adjusted once the threshold is determined.")
+
 
 def render_size_signal_plot(data_frame, threshold):
     streamlit.subheader("Sizes-Signals Plot")
@@ -168,7 +165,7 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     volume_plot_data = pandas.cut(
         volume_data_series,
         bins=bins,
-        right=False,
+        right=True,
         labels=labels
     )
     counts = data_frame['Volume']
@@ -208,6 +205,16 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     # sizes_plot.xaxis.major_label_overrides = bins_axis[1]
     column2.write(signal_histogram)
 
+    label_data_mean = data_frame.groupby("Label")["Volume"].mean().reset_index().rename(columns ={'index': 'Label', 'Volume':'Volume_Mean'})
+    label_data_all = data_frame.groupby("Label")["Volume"].std().reset_index().rename(columns ={'index': 'Label', 'Volume':'Volume_CV %'})
+    label_data_all['Volume_CV %'] = label_data_all['Volume_CV %'] * 100
+    label_data = label_data_mean.merge(label_data_all, how='left', on='Label', copy=False)
+    # label_data = label_data.merge(label_data_all, how='left', on='Label', copy=False)
+
+
+    column2.write("The volume profile from each label:")
+    column2.write(label_data)
+
     column1.bokeh_chart(sizes_plot, use_container_width=True)
     with column1.expander("More information about this plot?", expanded=False):
         streamlit.write("This plot generates  size distribution among your sample. "
@@ -226,7 +233,7 @@ def render_signal_plot(data_frame, threshold):
     min_volume = 0  # min(volumes)
     max_volume = maxi
 
-    default_bin = column1.number_input("How many bins do you want to have?", 1000)
+    default_bin = column1.number_input("How many bins do you want to have?", 2)
 
     slide = column2.slider('You can also adjust your bins by sliding this button:',
                                0,
@@ -236,7 +243,7 @@ def render_signal_plot(data_frame, threshold):
 
     arr_hist, edges = numpy.histogram(data_frame['Intensity'],
                                       bins = slide,
-                                      range = [mini, maxi])
+                                      range = (mini, maxi))
 
     signal_histogram = pandas.DataFrame({'arr_signal': arr_hist,
                                          'left': edges[:-1],
