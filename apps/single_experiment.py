@@ -14,7 +14,14 @@ from apps.render_threshold import render_threshold
 from apps.upload_data import data_frame_by_rendering_file_upload_section
 
 
+
 def page():
+    streamlit.header("EasyFlow processes results from image analysis software.")
+    streamlit.subheader("Current version hosts:")
+    streamlit.write(
+        "- **Basic Module**: This module generates plots for sizes, signals, "
+        "comparison between sizes and signals with threshold classification and condition/label-based data.")
+    streamlit.write("* If you wish to contribute or put your Python script as one of the modules here, let me know at immanuel.sanka[at]taltech[dot]ee")
     # Initialize page and get uploaded file data
     data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_upload_section()
 

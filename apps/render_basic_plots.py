@@ -2,8 +2,8 @@ import numpy
 import seaborn
 import streamlit
 import pandas
-from bokeh.transform import factor_cmap, jitter, dodge
-from bokeh.models import Panel, Tabs, Span, LinearAxis, SingleIntervalTicker
+from bokeh.transform import factor_cmap, jitter#, dodge
+from bokeh.models import Panel, Tabs, Span #, LinearAxis, SingleIntervalTicker
 from bokeh.plotting import figure
 
 seaborn.set_style("white")
@@ -46,16 +46,20 @@ def render_label_based_plot(data_frame, threshold):
         label_based.renderers.extend([vline])
 
     label_based.grid.visible = False
+
     label_data_initial = (data_frame[['Label','Classification']]).value_counts().sort_index().unstack().reset_index().rename(columns ={'index': 'Label'})
     label_data_initial['Fraction Positive'] = label_data_initial['Positive']/ (label_data_initial['Positive'] + label_data_initial['Negative'])
     label_data_initial['Total'] = label_data_initial['Positive'] + label_data_initial['Negative']
+    label_data_initial['Total'] = label_data_initial['Total'].map('{:,.0f}'.format)
+    label_data_initial['Positive'] = label_data_initial['Positive'].map('{:,.0f}'.format)
+    label_data_initial['Negative'] = label_data_initial['Negative'].map('{:,.0f}'.format)
 
     label_data_mean = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].mean().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_Mean'})
-    label_data_all = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].std().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_CV %'})
-    label_data_all['Intensity_CV %'] = label_data_all['Intensity_CV %'] * 100
+    label_data_all = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].std().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_StDev'})
     label_data = label_data_mean.merge(label_data_all, how='left', on='Label', copy=False)
-
+    label_data['Intensity_CV%'] = (label_data['Intensity_StDev']/label_data['Intensity_Mean']) * 100
     label_data_initial = label_data_initial.merge(label_data, how='right', on='Label', copy=False)
+    #label_data_initial = label_data_initial.style.set_properties(**{'text-align': 'right'})
 
     column1.write("From the graphs, we can see each values here:")
     # column2.write(label_data_initial)
@@ -235,11 +239,19 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     column1.write(signal_histogram)
 
     label_data_mean = data_frame.groupby("Label")["Volume"].mean().reset_index().rename(columns ={'index': 'Label', 'Volume':'Volume_Mean'})
-    label_data_all = data_frame.groupby("Label")["Volume"].std().reset_index().rename(columns ={'index': 'Label', 'Volume':'Volume_CV %'})
-    label_data_all['Volume_CV %'] = label_data_all['Volume_CV %'] * 100
+    label_data_all = data_frame.groupby("Label")["Volume"].std().reset_index().rename(columns ={'index': 'Label', 'Volume':'Volume_StDev'})
+    label_data_all['Volume_StDev'] = label_data_all['Volume_StDev'] * 100
     label_data = label_data_mean.merge(label_data_all, how='left', on='Label', copy=False)
+    label_data['Volume_CV%'] = label_data['Volume_StDev']/label_data['Volume_Mean']
     # label_data = label_data.merge(label_data_all, how='left', on='Label', copy=False)
 
+    total_mean = data_frame["Volume"].mean()
+    total_mean = round(float(total_mean), 2)
+    total_cv = data_frame["Volume"].std()
+    total_cv = (total_cv/total_mean) * 100
+    total_cv = round(float(total_cv), 2)
+    column1.write("The mean of total volume is {}.".format(total_mean))
+    column1.write("The CV from total volume is {}%.".format(total_cv))
 
     column1.write("The volume profile from each label:")
     column1.write(label_data)
