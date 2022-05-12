@@ -23,7 +23,7 @@ def calculate_total_positive_in_each_label(data_frame, detected_labels, label, s
         pos.append(b[x])
     data_positive = {"Positive": pos}
     data_positive = pandas.DataFrame(data_positive)
-    second_dataframe['Positive'] = data_positive
+    second_dataframe['Positive'] = data_positive.fillna(0)
 
 
 def calculate_total_negative_in_each_label(data_frame, detected_labels, label, second_dataframe, size):
@@ -34,7 +34,7 @@ def calculate_total_negative_in_each_label(data_frame, detected_labels, label, s
         neg.append(c[x])
     data_negative = {"Negative": neg}
     data_negative = pandas.DataFrame(data_negative)
-    second_dataframe['Negative'] = data_negative
+    second_dataframe['Negative'] = data_negative.fillna(0)
 
 
 def calculate_average_volume(data_frame, detected_labels, label, second_dataframe, size):
@@ -48,7 +48,7 @@ def calculate_average_volume(data_frame, detected_labels, label, second_datafram
         streamlit.warning("Put the correct label, size and volume.")
     data_total = {"Volume Total": vol}
     data_total = pandas.DataFrame(data_total)
-    second_dataframe['Average Volume (nL)'] = data_total
+    second_dataframe['Average Volume (nL)'] = data_total.fillna(0)
 
 
 def listing_labels_in_the_dataframe(data_frame, label):

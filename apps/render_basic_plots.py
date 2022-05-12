@@ -8,6 +8,8 @@ from bokeh.plotting import figure
 
 seaborn.set_style("white")
 
+
+
 def render_label_based_plot(data_frame, threshold):
     streamlit.subheader("Label-based Plot")
 
@@ -47,25 +49,27 @@ def render_label_based_plot(data_frame, threshold):
 
     label_based.grid.visible = False
 
-    label_data_initial = (data_frame[['Label','Classification']]).value_counts().sort_index().unstack().reset_index().rename(columns ={'index': 'Label'})
-    label_data_initial['Fraction Positive'] = label_data_initial['Positive']/ (label_data_initial['Positive'] + label_data_initial['Negative'])
-    label_data_initial['Total'] = label_data_initial['Positive'] + label_data_initial['Negative']
+
+    label_data_initial = (data_frame[['Label','Classification']]).value_counts().sort_index().unstack().reset_index().rename(columns ={'index': 'Label'}).fillna(0)
+    label_data_initial['Total'] = label_data_initial['Positive'].fillna(0) + label_data_initial['Negative'].fillna(0)
+    label_data_initial['Fraction Positive'] = label_data_initial['Positive'].fillna(0)/ (label_data_initial['Positive'].fillna(0) + label_data_initial['Negative'].fillna(0))
+
+
     label_data_initial['Total'] = label_data_initial['Total'].map('{:,.0f}'.format)
     label_data_initial['Positive'] = label_data_initial['Positive'].map('{:,.0f}'.format)
     label_data_initial['Negative'] = label_data_initial['Negative'].map('{:,.0f}'.format)
 
+    column1.write("If the table the data is missing, it means the positive data is 0 and no mean or %CV.")
     label_data_mean = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].mean().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_Mean'})
-    label_data_all = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].std().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_StDev'})
-    label_data = label_data_mean.merge(label_data_all, how='left', on='Label', copy=False)
+    label_data_std = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].std().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_StDev'})
+    label_data = label_data_mean.merge(label_data_std, how='left', on='Label', copy=False)
     label_data['Intensity_CV%'] = (label_data['Intensity_StDev']/label_data['Intensity_Mean']) * 100
-    label_data_initial = label_data_initial.merge(label_data, how='right', on='Label', copy=False)
-    #label_data_initial = label_data_initial.style.set_properties(**{'text-align': 'right'})
+    #label_data_download = label_data_initial.merge(label_data, how='right', on='Label', copy=True)
 
     column1.write("From the graphs, we can see each values here:")
-    # column2.write(label_data_initial)
-    # column2.write(label_data_mean)
-    # column2.write(label_data_all)
+    #label_data_initial.replace(numpy.nan,0)
     column1.write(label_data_initial)
+
     @streamlit.cache
     def convert_df_to_csv(df):
         # IMPORTANT: Cache the conversion to prevent computation on every rerun
@@ -74,12 +78,21 @@ def render_label_based_plot(data_frame, threshold):
     column1.download_button(
         label="Download data as .CSV",
         data=convert_df_to_csv(label_data_initial),
-        file_name='large_df.csv',
+        file_name='base_label.csv',
         mime='text/csv',
     )
-    label_based.axis.axis_label_text_font_size = "12pt"
-    label_based.yaxis.major_label_text_font_size = "10pt"
-    label_based.xaxis.major_label_text_font_size = "10pt"
+
+    column1.write(label_data)
+    column1.download_button(
+        label="Download data as .CSV",
+        data=convert_df_to_csv(label_data),
+        file_name='statistics.csv',
+        mime='text/csv',
+    )
+
+    label_based.axis.axis_label_text_font_size = "16pt"
+    label_based.yaxis.major_label_text_font_size = "14pt"
+    label_based.xaxis.major_label_text_font_size = "14pt"
 
     column2.bokeh_chart(label_based, use_container_width=True)
     with column2.expander("More information about this plot?", expanded=False):
@@ -125,9 +138,9 @@ def render_size_signal_plot(data_frame, threshold):
     total = details['Classification'].sum()
     fraction = details.loc[details['Type'] == "Positive", "Classification"]/total
     fraction = round(float(fraction.values), 2)
-    size_signal_plot.axis.axis_label_text_font_size = "12pt"
-    size_signal_plot.yaxis.major_label_text_font_size = "12pt"
-    size_signal_plot.xaxis.major_label_text_font_size = "12pt"
+    size_signal_plot.axis.axis_label_text_font_size = "16pt"
+    size_signal_plot.yaxis.major_label_text_font_size = "14pt"
+    size_signal_plot.xaxis.major_label_text_font_size = "14pt"
     column1.write(details)
     column1.write("The total droplets within the experiment is {}.".format(total))
     column1.write("The fraction positive of the experiment is {}.".format(fraction))
@@ -228,9 +241,9 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
                     )
 
     sizes_plot.grid.visible = False
-    sizes_plot.axis.axis_label_text_font_size = "12pt"
-    sizes_plot.yaxis.major_label_text_font_size = "12pt"
-    sizes_plot.xaxis.major_label_text_font_size = "12pt"
+    sizes_plot.axis.axis_label_text_font_size = "16pt"
+    sizes_plot.yaxis.major_label_text_font_size = "14pt"
+    sizes_plot.xaxis.major_label_text_font_size = "14pt"
 
     signal_histogram = sizes_histogram.rename(columns=({'arr_signal': 'Count', 'left':'Bin_left', 'right':'Bin_right'}))
     column1.write("Here is the table that sums up the value for each group with group's boundaries.")
@@ -334,9 +347,9 @@ def render_signal_plot(data_frame, threshold):
         if line =="Line":
             vline = Span(location=threshold, dimension='height', line_color='red', line_width=3, line_dash='dashed')
             fig_signal.renderers.extend([vline])
-        fig_signal.axis.axis_label_text_font_size = "12pt"
-        fig_signal.yaxis.major_label_text_font_size = "12pt"
-        fig_signal.xaxis.major_label_text_font_size = "12pt"
+        fig_signal.axis.axis_label_text_font_size = "16pt"
+        fig_signal.yaxis.major_label_text_font_size = "14pt"
+        fig_signal.xaxis.major_label_text_font_size = "14pt"
         signals_plot.append(panel)
 
 
