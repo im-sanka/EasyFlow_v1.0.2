@@ -82,7 +82,7 @@ def render_label_based_plot(data_frame, threshold):
         mime='text/csv',
     )
 
-    column1.write(label_data)
+    column1.write(label_data.fillna(0))
     column1.download_button(
         label="Download data as .CSV",
         data=convert_df_to_csv(label_data),
