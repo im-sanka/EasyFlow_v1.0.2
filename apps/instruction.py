@@ -5,7 +5,7 @@ import streamlit
 def page():
     streamlit.write("For this session, we provide one dummy data which you can download and test it in this version.")
 
-    with open("dummy_data.csv", "rb") as file:
+    with open("apps/dummy_data.csv", "rb") as file:
         btn = streamlit.download_button(
             label="Download dummy data",
             data=file,
