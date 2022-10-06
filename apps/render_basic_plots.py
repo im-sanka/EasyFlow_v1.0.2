@@ -11,7 +11,7 @@ seaborn.set_style("white")
 
 
 def render_label_based_plot(data_frame, threshold):
-    streamlit.subheader("Label-based Plot")
+    streamlit.subheader("Label-based Droplet Signals Distribution")
 
     # These columns are needed
     column1, column2 = streamlit.columns(2)
@@ -106,7 +106,7 @@ def render_label_based_plot(data_frame, threshold):
         streamlit.write("This plot groups pixel intensities from the available data. There is a red line which will"
                         "show the threshold.")
 def render_size_signal_plot(data_frame, threshold):
-    streamlit.subheader("Sizes-Signals Plot")
+    streamlit.subheader("Relationship between Droplet Sizes and Signals")
 
     column1, column2 = streamlit.columns(2)
 

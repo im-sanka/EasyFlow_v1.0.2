@@ -40,9 +40,9 @@ def page():
         try:
             #streamlit.header("Data Visualization")
             #These render the basic modules
-            streamlit.subheader("Droplet Sizes Plot")
+            streamlit.subheader("Droplet Sizes Distribution")
             render_sizes_plot_histogram(data_frame)
-            streamlit.subheader("Droplet Signal Plot")
+            streamlit.subheader("Droplet Signals Distribution")
             column1, column2, column3 = streamlit.columns(3)
             threshold = render_threshold(column1, data_frame)
             streamlit.info("This threshold will affect the results of three sections below, including their visualizations.")
