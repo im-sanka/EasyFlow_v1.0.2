@@ -59,14 +59,16 @@ def render_label_based_plot(data_frame, threshold):
     label_data_initial['Positive'] = label_data_initial['Positive'].map('{:,.0f}'.format)
     label_data_initial['Negative'] = label_data_initial['Negative'].map('{:,.0f}'.format)
 
-    column1.write("If the table the data is missing, it means the positive data is 0 and no mean or %CV.")
+    column1.info("There will be at least one negative droplet for minimum threshold value. The values will be adjusted once the threshold is determined.")
+
     label_data_mean = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].mean().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_Mean'})
     label_data_std = data_frame[data_frame["Classification"] == "Positive"].groupby("Label")["Intensity"].std().reset_index().rename(columns ={'index': 'Label', 'Intensity':'Intensity_StDev'})
     label_data = label_data_mean.merge(label_data_std, how='left', on='Label', copy=False)
     label_data['Intensity_CV%'] = (label_data['Intensity_StDev']/label_data['Intensity_Mean']) * 100
     #label_data_download = label_data_initial.merge(label_data, how='right', on='Label', copy=True)
-
-    column1.write("From the graphs, we can see each values here:")
+    column1.header(" ")
+    #column1.write(" ")
+    column1.write("Table 5. Droplets profile after threshold implementation")
     #label_data_initial.replace(numpy.nan,0)
     column1.write(label_data_initial)
 
@@ -82,25 +84,27 @@ def render_label_based_plot(data_frame, threshold):
         mime='text/csv',
     )
 
-    column1.write(label_data.fillna(0))
-    column1.download_button(
-        label="Download data as .CSV",
-        data=convert_df_to_csv(label_data),
-        file_name='statistics.csv',
-        mime='text/csv',
-    )
+
 
     label_based.axis.axis_label_text_font_size = "16pt"
     label_based.yaxis.major_label_text_font_size = "14pt"
     label_based.xaxis.major_label_text_font_size = "14pt"
 
     column2.bokeh_chart(label_based, use_container_width=True)
-    with column2.expander("More information about this plot?", expanded=False):
+
+
+    #column2.info("Do not worry about the <NA> or weird values on the table. The values will be adjusted once the threshold is determined.")
+    column2.write("Table 6. Droplets signals in each label group with basic statistics")
+    column2.write(label_data.fillna(0))
+    column2.download_button(
+        label="Download data as .CSV",
+        data=convert_df_to_csv(label_data),
+        file_name='statistics.csv',
+        mime='text/csv',
+    )
+    with streamlit.expander("More information about this plot?", expanded=False):
         streamlit.write("This plot groups pixel intensities from the available data. There is a red line which will"
                         "show the threshold.")
-    column2.info("Do not worry about the <NA> or weird values on the table. The values will be adjusted once the threshold is determined.")
-
-
 def render_size_signal_plot(data_frame, threshold):
     streamlit.subheader("Sizes-Signals Plot")
 
@@ -133,7 +137,7 @@ def render_size_signal_plot(data_frame, threshold):
         size_signal_plot.renderers.extend([vline])
 
     column2.info("**INFO**: Classification will be performed based on the threshold input.")
-    column1.write("Based on the threshold, you have:")
+    column1.write("Table 4. Classification based on determined threshold")
     details = (data_frame['Classification']).value_counts().reset_index().rename(columns = {'index': 'Type'})
     total = details['Classification'].sum()
     fraction = details.loc[details['Type'] == "Positive", "Classification"]/total
@@ -157,12 +161,12 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
     max_volume = max(volumes)
 
     column1, column2 = streamlit.columns(2)
-    default_bin = column1.number_input("How many limits (including 0) do you want to have?", 5)
+    default_bin = column1.number_input("How many bins do you want to have?", 5)
     # slider = column1.slider("Check slider", 0, max_volume, default_bin)
-    initial_value = ", ".join([str(round(bin_value, 5)) for bin_value in numpy.linspace(min_volume, max_volume, default_bin)])
+    initial_value = ", ".join([str(round(bin_value, 5)) for bin_value in numpy.linspace(min_volume, max_volume, default_bin+1)])
 
     bins_input_field_value: str = column2.text_input(
-        "Or, if you want define your own bins with your own range, insert the boundary values here:",
+        "If you want define your bins with your range, insert the boundary values here:",
         initial_value
     )
     column2.warning(
@@ -180,7 +184,7 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
 
 
 def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
-    streamlit.subheader("Droplet Sizes Plot")
+    #streamlit.subheader("Droplet Sizes Plot")
 
     volume_data_series: pandas.Series = data_frame['Volume'].map(float)
 
@@ -246,7 +250,7 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     sizes_plot.xaxis.major_label_text_font_size = "14pt"
 
     signal_histogram = sizes_histogram.rename(columns=({'arr_signal': 'Count', 'left':'Bin_left', 'right':'Bin_right'}))
-    column1.write("Here is the table that sums up the value for each group with group's boundaries.")
+    column1.write("Table 1. Borders for each bins and how many droplets in the group")
 
     # sizes_plot.xaxis.major_label_overrides = bins_axis[1]
     column1.write(signal_histogram)
@@ -266,7 +270,7 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
     column1.write("The mean of total volume is {}.".format(total_mean))
     column1.write("The CV from total volume is {}%.".format(total_cv))
 
-    column1.write("The volume profile from each label:")
+    column1.write("Table 2. Volume profile for each labeled droplets with basic statistics")
     column1.write(label_data)
 
     column2.bokeh_chart(sizes_plot, use_container_width=True)
@@ -275,7 +279,7 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
                         "The binning is based on the bins which can be defined on the available box.")
 
 def render_signal_plot(data_frame, threshold):
-    streamlit.subheader("Droplet Signal Plot")
+    #streamlit.subheader("Droplet Signal Plot")
 
     column1, column2 = streamlit.columns(2)
 
@@ -287,10 +291,10 @@ def render_signal_plot(data_frame, threshold):
     max_signal = maxi
 
     default_bin = column1.number_input("How many bins do you want to have?", 3)
-    initial_value = ", ".join([str(round(bin_value, 5)) for bin_value in numpy.linspace(min_signal, max_signal, default_bin)])
+    initial_value = ", ".join([str(round(bin_value, 5)) for bin_value in numpy.linspace(min_signal, max_signal, default_bin+1)])
 
     bins_input_field_value: str = column2.text_input(
-        "Or, if you want define your own bins with your own range, insert the boundary values here:",
+        "If you want define your bins with your range, insert the boundary values here:",
         initial_value
     )
     column2.warning(
@@ -355,7 +359,7 @@ def render_signal_plot(data_frame, threshold):
 
     signal_show = Tabs(tabs=signals_plot)
 
-    column1.write("You can find the details of your bins here:")
+    column1.write("Table 3. Borders for each bins and how many droplets in the group")
     signal_histogram = signal_histogram.rename(columns={'arr_signal': 'Counts', 'left': 'Bin_left', 'right': 'Bin_right'})
     column1.write(signal_histogram)
     with column1.expander("More information about this plot?", expanded=False):

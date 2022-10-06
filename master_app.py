@@ -3,7 +3,7 @@ from PIL import Image
 
 # Custom imports
 from multipage_backbone import MultiPages
-from apps import single_experiment, instruction #home, multi_experiment,
+from apps import single_experiment, instruction
 
 # This line keeps the page as a wide version of page.
 streamlit.set_page_config(layout="wide", initial_sidebar_state="expanded")
