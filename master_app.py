@@ -12,7 +12,7 @@ streamlit.set_page_config(layout="wide", initial_sidebar_state="expanded")
 page = MultiPages()
 
 # This is the banner which will be available everytime we change the app
-image = Image.open('files/banner_new2.jpg')
+image = Image.open('files/banner_new3.png')
 streamlit.image(image)
 
 # Add all your applications (pages) here
