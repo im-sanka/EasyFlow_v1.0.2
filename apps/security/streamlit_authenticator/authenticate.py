@@ -4,6 +4,7 @@ import streamlit as st
 from datetime import datetime, timedelta
 import extra_streamlit_components as stx
 
+
 from apps.security.streamlit_authenticator import hasher
 from apps.security.streamlit_authenticator.utils import generate_random_pw
 
@@ -175,26 +176,23 @@ class Authenticate:
         str
             Username of the authenticated user.
         """
-        login_form = None
         if location not in ['main', 'sidebar']:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if not st.session_state['authentication_status']:
             self._check_cookie()
             if st.session_state['authentication_status'] != True:
                 if location == 'main':
-                    if st.sidebar.button('Login'):
-                        login_form = st.form('Login')
+                    login_form = st.form('Login')
                 elif location == 'sidebar':
-                    if st.sidebar.button('Login'):
-                        login_form = st.sidebar.form('Login')
-                if login_form is not None:
-                    login_form.subheader(form_name)
-                    self.username = login_form.text_input('Username').lower()
-                    st.session_state['username'] = self.username
-                    self.password = login_form.text_input('Password', type='password')
+                    login_form = st.sidebar.form('Login')
+                login_form.subheader(form_name)
+                self.username = login_form.text_input('Username').lower()
+                st.session_state['username'] = self.username
+                print(self.username)
+                self.password = login_form.text_input('Password', type='password')
 
-                    if login_form.form_submit_button('Login'):
-                        self._check_credentials()
+                if login_form.form_submit_button('Login'):
+                    self._check_credentials()
 
         return st.session_state['name'], st.session_state['authentication_status'], st.session_state['username']
 

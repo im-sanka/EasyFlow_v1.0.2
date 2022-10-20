@@ -1,4 +1,4 @@
-from apps.security.streamlit_authenticator import authenticate as auth
+from streamlit_authenticator import authenticate as auth
 import yaml
 from yaml import SafeLoader
 
@@ -17,11 +17,7 @@ def authenticate():
         auth_config['cookie']['expiry_days'],
         auth_config['preauthorized']
     )
-    name, authentication_status, username = authenticator.login('Login', 'main')
-
-
-def get_auth_status():
-    return authentication_status
+    return authenticator.login('Login', 'sidebar')
 
 
 def get_authenticator():
@@ -39,3 +35,5 @@ def get_username():
 
 def enable_logout():
     authenticator.logout('Logout', 'sidebar')
+
+

@@ -11,5 +11,6 @@ openpyxl < 3.0.7
 pi
 streamlit-authenticator
 PyYAML~=6.0
-jwt
+PyJWT
 bcrypt
+mysql-connector-python
