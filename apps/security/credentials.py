@@ -2,8 +2,8 @@ import streamlit as st
 import mysql.connector
 
 
-def page():
-    """
+def get_credentials() -> dict:
+
     # Initialize connection.
     # Uses st.experimental_singleton to only run once.
     @st.experimental_singleton
@@ -21,8 +21,13 @@ def page():
             return cur.fetchall()
 
     rows = run_query("SELECT * from User;")
-
-    # Print results.
+    creds = {'usernames': {}}
+    # Aggregate credentials
     for row in rows:
-        st.write(f"{row[0]} has a :{row[1]}:")
-    """
+        username = row[2]
+        name = row[5] + " " + row[6]
+        email = row[1]
+        psw = row[3]
+        creds['usernames'][username] = {'email': email, 'name': name, 'password': psw}
+    return creds
+

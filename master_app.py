@@ -2,7 +2,6 @@ import streamlit as st
 from PIL import Image
 
 import apps.security.login_page
-import apps.users.tmp as temp
 from apps.security import authentication_service as auth_service
 
 # Custom imports
@@ -24,13 +23,12 @@ st.image(image)
 ##page.add_page("Multi Experiment", multi_experiment.page)
 name, authentication_status, username = auth_service.authenticate()
 page.add_page("Home", homepage)
-page.add_page("tmp", temp.page)
 # page.add_page("Login", apps.security.login_page.page(authentication_status, auth_service.get_authenticator()))
 page.add_page("Instruction", instruction.page)
 
 if authentication_status:
     auth_service.enable_logout()
-    st.write(f'Welcome *{auth_service.username}*')
+    st.write(f'Welcome *{name}*')
     # Add all your applications (pages) here
     # For adding app, the python file should be in the apps folder first and call the app as page() for making it clean here.
     # Example --> page.add_page("Name which will be shown in the markdown page", python script with .page)

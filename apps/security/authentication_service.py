@@ -1,5 +1,6 @@
 from streamlit_authenticator import authenticate as auth
 import yaml
+from apps.security.credentials import get_credentials
 from yaml import SafeLoader
 
 name, authentication_status, username, authenticator = None, None, None, None
@@ -9,9 +10,10 @@ def authenticate():
     global name, authentication_status, username, authenticator
     with open('apps/security/config.yaml') as auth_config_file:
         auth_config = yaml.load(auth_config_file, Loader=SafeLoader)
-
+    credentials = get_credentials()
+    print(auth_config['credentials'])
     authenticator = auth.Authenticate(
-        auth_config['credentials'],
+        credentials,
         auth_config['cookie']['name'],
         auth_config['cookie']['key'],
         auth_config['cookie']['expiry_days'],
