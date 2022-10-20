@@ -1,7 +1,5 @@
-import streamlit_authenticator as stauth
-from pathlib import Path
+from apps.security.streamlit_authenticator import authenticate as auth
 import yaml
-import pickle
 from yaml import SafeLoader
 
 name, authentication_status, username, authenticator = None, None, None, None
@@ -12,7 +10,7 @@ def authenticate():
     with open('apps/security/config.yaml') as auth_config_file:
         auth_config = yaml.load(auth_config_file, Loader=SafeLoader)
 
-    authenticator = stauth.Authenticate(
+    authenticator = auth.Authenticate(
         auth_config['credentials'],
         auth_config['cookie']['name'],
         auth_config['cookie']['key'],
@@ -27,7 +25,7 @@ def get_auth_status():
 
 
 def get_authenticator():
-    if authenticator is not None and authenticator.__class__ == stauth.authenticate.Authenticate:
+    if authenticator is not None and authenticator.__class__ == auth.Authenticate:
         return authenticator
 
 
