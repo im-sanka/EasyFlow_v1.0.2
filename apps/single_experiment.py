@@ -26,7 +26,7 @@ def page():
     #     "comparison between sizes and signals with threshold classification and condition/label-based data.")
     # streamlit.write("* If you wish to contribute or put your Python script as one of the modules here, let me know at immanuel.sanka[at]taltech[dot]ee")
     # Initialize page and get uploaded file data
-    data_frame = data_frame_by_rendering_file_upload_section()
+    data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_upload_section()
 
     if data_frame is None:
         return

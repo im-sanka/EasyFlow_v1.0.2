@@ -156,7 +156,7 @@ def render_size_signal_plot(data_frame, threshold):
                         "The threshold can be changed from the box at the top. Red line will appear"
                         "to show the threshold.")
 
-def _bin_sizes_input_data_from_user(volumes: list) -> [list, list]:
+def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[str]]:
     min_volume = 0  # min(volumes)
     max_volume = max(volumes)
 
