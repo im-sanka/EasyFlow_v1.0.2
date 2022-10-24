@@ -12,16 +12,21 @@ from apps.home import page as homepage
 # This line keeps the page as a wide version of page.
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")
 
-
-
 # Create an instance of the app that contain the written below
 page = MultiPages()
 
 # This is the banner which will be available everytime we change the app
 image = Image.open('files/banner_new3.png')
 st.image(image)
-##page.add_page("Multi Experiment", multi_experiment.page)
-name, authentication_status, username = auth_service.authenticate()
+# page.add_page("Multi Experiment", multi_experiment.page)
+name, authentication_status, username, affiliation = auth_service.authenticate()
+st.write(affiliation)
+try:
+    if auth_service.get_authenticator().register_user('Register user', preauthorization=False):
+        auth_service.register_user()
+        st.success('User registered successfully')
+except Exception as e:
+    st.error(e)
 page.add_page("Home", homepage)
 # page.add_page("Login", apps.security.login_page.page(authentication_status, auth_service.get_authenticator()))
 page.add_page("Instruction", instruction.page)

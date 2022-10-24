@@ -4,11 +4,10 @@ import streamlit as st
 from datetime import datetime, timedelta
 import extra_streamlit_components as stx
 
+from .hasher import Hasher
+from .utils import generate_random_pw
 
-from apps.security.streamlit_authenticator import hasher
-from apps.security.streamlit_authenticator.utils import generate_random_pw
-
-from apps.security.streamlit_authenticator.exceptions import CredentialsError, ResetError, RegisterError, ForgotError, UpdateError
+from .exceptions import CredentialsError, ResetError, RegisterError, ForgotError, UpdateError
 
 
 class Authenticate:
@@ -42,13 +41,14 @@ class Authenticate:
         self.cookie_expiry_days = cookie_expiry_days
         self.preauthorized = preauthorized
         self.cookie_manager = stx.CookieManager()
-
         if 'name' not in st.session_state:
             st.session_state['name'] = None
         if 'authentication_status' not in st.session_state:
             st.session_state['authentication_status'] = None
         if 'username' not in st.session_state:
             st.session_state['username'] = None
+        if 'affiliation' not in st.session_state:
+            st.session_state['affiliation'] = None
         if 'logout' not in st.session_state:
             st.session_state['logout'] = None
 
@@ -63,6 +63,7 @@ class Authenticate:
         """
         return jwt.encode({'name': st.session_state['name'],
                            'username': st.session_state['username'],
+                           'affiliation': st.session_state['affiliation'],
                            'exp_date': self.exp_date}, self.key, algorithm='HS256')
 
     def _token_decode(self) -> str:
@@ -116,6 +117,8 @@ class Authenticate:
                             st.session_state['name'] = self.token['name']
                             st.session_state['username'] = self.token['username']
                             st.session_state['authentication_status'] = True
+                            st.session_state['affiliation'] = \
+                                self.credentials['usernames'][self.token['username']]['affiliation']
 
     def _check_credentials(self, inplace: bool = True) -> bool:
         """
@@ -185,16 +188,17 @@ class Authenticate:
                     login_form = st.form('Login')
                 elif location == 'sidebar':
                     login_form = st.sidebar.form('Login')
+
                 login_form.subheader(form_name)
                 self.username = login_form.text_input('Username').lower()
                 st.session_state['username'] = self.username
-                print(self.username)
                 self.password = login_form.text_input('Password', type='password')
 
                 if login_form.form_submit_button('Login'):
                     self._check_credentials()
 
-        return st.session_state['name'], st.session_state['authentication_status'], st.session_state['username']
+        return st.session_state['name'], st.session_state['authentication_status'],\
+               st.session_state['username'], st.session_state['affiliation']
 
     def logout(self, button_name: str, location: str = 'main'):
         """
@@ -216,6 +220,7 @@ class Authenticate:
                 st.session_state['name'] = None
                 st.session_state['username'] = None
                 st.session_state['authentication_status'] = None
+                st.session_state['affiliation'] = None
         elif location == 'sidebar':
             if st.sidebar.button(button_name):
                 self.cookie_manager.delete(self.cookie_name)
@@ -223,6 +228,7 @@ class Authenticate:
                 st.session_state['name'] = None
                 st.session_state['username'] = None
                 st.session_state['authentication_status'] = None
+                st.session_state['affiliation'] = None
 
     def _update_password(self, username: str, password: str):
         """
@@ -235,7 +241,7 @@ class Authenticate:
         password: str
             The updated plain text password.
         """
-        self.credentials['usernames'][username]['password'] = hasher([password]).generate()[0]
+        self.credentials['usernames'][username]['password'] = Hasher([password]).generate()[0]
 
     def reset_password(self, username: str, form_name: str, location: str = 'main') -> bool:
         """
@@ -302,7 +308,7 @@ class Authenticate:
             False: any user can register.
         """
         self.credentials['usernames'][username] = {'name': name,
-                                                   'password': hasher([password]).generate()[0], 'email': email}
+                                                   'password': Hasher([password]).generate()[0], 'email': email}
         if preauthorization:
             self.preauthorized['emails'].remove(email)
 
@@ -337,11 +343,12 @@ class Authenticate:
         new_email = register_user_form.text_input('Email')
         new_username = register_user_form.text_input('Username').lower()
         new_name = register_user_form.text_input('Name')
+        new_affiliation = register_user_form.text_input('Affiliation')
         new_password = register_user_form.text_input('Password', type='password')
         new_password_repeat = register_user_form.text_input('Repeat password', type='password')
 
         if register_user_form.form_submit_button('Register'):
-            if len(new_email) and len(new_username) and len(new_name) and len(new_password) > 0:
+            if len(new_email) and len(new_username) and len(new_name) and len(new_affiliation)  and len(new_password) > 0:
                 if new_username not in self.credentials['usernames']:
                     if new_password == new_password_repeat:
                         if preauthorization:
@@ -376,7 +383,7 @@ class Authenticate:
             New plain text password that should be transferred to user securely.
         """
         self.random_password = generate_random_pw()
-        self.credentials['usernames'][username]['password'] = hasher([self.random_password]).generate()[0]
+        self.credentials['usernames'][username]['password'] = Hasher([self.random_password]).generate()[0]
         return self.random_password
 
     def forgot_password(self, form_name: str, location: str = 'main') -> tuple:
