@@ -47,6 +47,8 @@ class Authenticate:
             st.session_state['authentication_status'] = None
         if 'username' not in st.session_state:
             st.session_state['username'] = None
+        if 'email' not in st.session_state:
+            st.session_state['email'] = None
         if 'affiliation' not in st.session_state:
             st.session_state['affiliation'] = None
         if 'logout' not in st.session_state:
@@ -63,7 +65,7 @@ class Authenticate:
         """
         return jwt.encode({'name': st.session_state['name'],
                            'username': st.session_state['username'],
-                           'affiliation': st.session_state['affiliation'],
+                           'email': st.session_state['email'],
                            'exp_date': self.exp_date}, self.key, algorithm='HS256')
 
     def _token_decode(self) -> str:
@@ -119,6 +121,7 @@ class Authenticate:
                             st.session_state['authentication_status'] = True
                             st.session_state['affiliation'] = \
                                 self.credentials['usernames'][self.token['username']]['affiliation']
+                            st.session_state['email'] = self.credentials['usernames'][self.token['username']]['email']
 
     def _check_credentials(self, inplace: bool = True) -> bool:
         """
@@ -144,6 +147,7 @@ class Authenticate:
                         self.cookie_manager.set(self.cookie_name, self.token,
                                                 expires_at=datetime.now() + timedelta(days=self.cookie_expiry_days))
                         st.session_state['authentication_status'] = True
+                        st.session_state["affiliation"] = self.credentials['usernames'][self.username]['affiliation']
                     else:
                         return True
                 else:
@@ -289,7 +293,7 @@ class Authenticate:
             else:
                 raise CredentialsError
 
-    def _register_credentials(self, username: str, name: str, password: str, email: str, preauthorization: bool):
+    def _register_credentials(self, username: str, name: str, password: str, email: str, affiliation: str, preauthorization: bool):
         """
         Adds to credentials dictionary the new user's information.
 
@@ -308,7 +312,9 @@ class Authenticate:
             False: any user can register.
         """
         self.credentials['usernames'][username] = {'name': name,
-                                                   'password': Hasher([password]).generate()[0], 'email': email}
+                                                   'password': Hasher([password]).generate()[0],
+                                                   'affiliation': affiliation,
+                                                   'email': email}
         if preauthorization:
             self.preauthorized['emails'].remove(email)
 
@@ -348,19 +354,19 @@ class Authenticate:
         new_password_repeat = register_user_form.text_input('Repeat password', type='password')
 
         if register_user_form.form_submit_button('Register'):
-            if len(new_email) and len(new_username) and len(new_name) and len(new_affiliation)  and len(new_password) > 0:
+            if len(new_email) and len(new_username) and len(new_name) and len(new_affiliation) and len(new_password) > 0:
                 if new_username not in self.credentials['usernames']:
                     if new_password == new_password_repeat:
                         if preauthorization:
                             if new_email in self.preauthorized['emails']:
                                 self._register_credentials(new_username, new_name, new_password, new_email,
-                                                           preauthorization)
+                                                           new_affiliation, preauthorization)
                                 return True
                             else:
                                 raise RegisterError('User not pre-authorized to register')
                         else:
                             self._register_credentials(new_username, new_name, new_password, new_email,
-                                                       preauthorization)
+                                                       new_affiliation, preauthorization)
                             return True
                     else:
                         raise RegisterError('Passwords do not match')

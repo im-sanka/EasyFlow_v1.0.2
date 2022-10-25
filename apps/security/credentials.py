@@ -1,24 +1,13 @@
 import streamlit as st
 import mysql.connector
+import streamlit as st
 
-
-# Initialize connection.
-# Uses st.experimental_singleton to only run once.
-@st.experimental_singleton
-def init_connection():
-    return mysql.connector.connect(**st.secrets["mysql"])
 def get_credentials() -> dict:
-
-    conn = init_connection()
-
-    # Perform query.
-    # Uses st.experimental_memo to only rerun when the query changes or after 10 min.
-    def run_query(query):
-        with conn.cursor() as cur:
-            cur.execute(query)
-            return cur.fetchall()
-
-    rows = run_query("SELECT * from User;")
+    conn = mysql.connector.connect(**st.secrets["mysql"])
+    cursor = conn.cursor()
+    cursor.execute("SELECT * from User;")
+    rows = cursor.fetchall()
+    conn.close()
     creds = {'usernames': {}}
     # Aggregate credentials
     for row in rows:
@@ -30,25 +19,42 @@ def get_credentials() -> dict:
         creds['usernames'][username] = {'email': email, 'name': name, 'password': psw, 'affiliation': affiliation}
     return creds
 
+
 def add_credentials_to_db(credentials):
     existing_creds = get_credentials()
     existing_users = list(existing_creds['usernames'].keys())
     old_and_new_users = list(credentials['usernames'].keys())
-    st.write(existing_users)
-    st.write(old_and_new_users)
     for user in old_and_new_users:
         if user not in existing_users:
-            st.write(user)
+
+            st.write('start fetching')
             creds = credentials['usernames']
-            st.write(creds[user])
+            st.write(creds)
             email = creds[user]['email']
-            username = creds[user]['username']
+            st.write(email)
+            username = user
+            st.write(username)
             psw_hash = creds[user]['password']
+            st.write(psw_hash)
+            affiliation = creds[user]['affiliation']
+            st.write(affiliation)
             fullname = str(creds[user]['name']).split(" ")
             firstname = fullname[0]
+            st.write("1st" + firstname)
             lastname = fullname[1]
-            conn = init_connection()
-            mycursor = conn.cursor()
-            query = \
-                f'INSERT INTO User(user_e_mail, username, password_hash, firstname, lastname, affiliation) {firstname}'
-
+            st.write("2nd" + lastname)
+            conn = mysql.connector.connect(**st.secrets["mysql"])
+            cursor = conn.cursor()
+            st.write('after fetching')
+            query = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
+                    "VALUES (%s,%s,%s,%s,%s,%s);"
+            # .format(email, username, psw_hash, firstname, lastname, affiliation)
+            val = (email, username, psw_hash, firstname, lastname, affiliation)
+            st.write(val)
+            # query = "INSERT INTO User(user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
+            #        "VALUES ('manual@mail.com', 'manual', 'hash', 'Manu', 'Al', 'Mental');"
+            cursor.execute(query, val)
+            st.write('executed')
+            conn.commit()
+            cursor.close()
+            conn.close()
