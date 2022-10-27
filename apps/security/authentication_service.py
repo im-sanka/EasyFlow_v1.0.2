@@ -1,14 +1,12 @@
 from apps.security.streamlit_authenticator import authenticate as auth
 import yaml
+import streamlit as st
 from apps.security.credentials import get_credentials
 from apps.security.credentials import add_credentials_to_db
 from yaml import SafeLoader
 
-name, authentication_status, username, authenticator = None, None, None, None
-
 
 def authenticate():
-    global name, authentication_status, username, authenticator
     with open('apps/security/config.yaml') as auth_config_file:
         auth_config = yaml.load(auth_config_file, Loader=SafeLoader)
     credentials = get_credentials()
@@ -19,26 +17,19 @@ def authenticate():
         auth_config['cookie']['expiry_days'],
         auth_config['preauthorized']
     )
-    return authenticator.login('Login', 'sidebar')
+    st.session_state['authenticator'] = authenticator
 
-
-def get_authenticator():
-    if authenticator is not None and authenticator.__class__ == auth.Authenticate:
-        return authenticator
-
-
-def get_user_name():
-    return name
-
-
-def get_username():
-    return username
-
+def enable_login():
+    st.session_state['authenticator'].login('Login', 'sidebar')
 
 def enable_logout():
-    if authenticator is not None:
-        authenticator.logout('Logout', 'sidebar')
+    st.session_state['authenticator'].logout('Logout', 'sidebar')
 
-def register_user():
-    if authenticator is not None:
-        add_credentials_to_db(authenticator.credentials)
+
+def enable_registration(authenticator):
+    try:
+        if st.session_state['authenticator'].register_user('Register user', preauthorization=False, location='main'):
+            add_credentials_to_db(st.session_state['authenticator'].credentials)
+            st.success('User registered successfully')
+    except Exception as e:
+        st.error(e)

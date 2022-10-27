@@ -141,6 +141,7 @@ class Authenticate:
             try:
                 if self._check_pw():
                     if inplace:
+                        st.write("reached")
                         st.session_state['name'] = self.credentials['usernames'][self.username]['name']
                         self.exp_date = self._set_exp_date()
                         self.token = self._token_encode()
@@ -187,7 +188,7 @@ class Authenticate:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
         if not st.session_state['authentication_status']:
             self._check_cookie()
-            if st.session_state['authentication_status'] != True:
+            if not st.session_state['authentication_status']:
                 if location == 'main':
                     login_form = st.form('Login')
                 elif location == 'sidebar':
@@ -201,7 +202,7 @@ class Authenticate:
                 if login_form.form_submit_button('Login'):
                     self._check_credentials()
 
-        return st.session_state['name'], st.session_state['authentication_status'],\
+        return st.session_state['name'], st.session_state['authentication_status'], \
                st.session_state['username'], st.session_state['affiliation']
 
     def logout(self, button_name: str, location: str = 'main'):
@@ -317,6 +318,12 @@ class Authenticate:
                                                    'email': email}
         if preauthorization:
             self.preauthorized['emails'].remove(email)
+        self._check_cookie()
+        st.session_state['username'] = self.username
+        self.username = username
+        self.password = password
+        st.write(self.username + self.password)
+        self._check_credentials()
 
     def register_user(self, form_name: str, location: str = 'main', preauthorization=True) -> bool:
         """
