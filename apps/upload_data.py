@@ -4,6 +4,7 @@ import streamlit
 from pandas import DataFrame
 
 
+
 def data_frame_by_rendering_file_upload_section() -> Union[dict[Any, DataFrame], DataFrame, None]:
     uploaded_file = streamlit.file_uploader(
         "You can use the .CSV or .XLSX filetype in this platform.",

@@ -1,0 +1,17 @@
+credentials:
+  usernames:
+    dabere:
+      email: dabere@ttu.ee
+      name: Daniel Berežnoi
+      password: $2b$12$jM.h8dT3HhanoSPE6S8wYuKStrWlNo1F0zH.RxXHtM5oAhQx1sYXC # 123
+    antlil:
+      email: antlil@ttu.ee
+      name: Anti Lilleaed
+      password: $2b$12$nfFVHSETAcgJuN.NdA8riuGn4miVyYjb1Mzub1f3StG1TMmG0pbY6 # 456
+cookie:
+  expiry_days: 1
+  key: key # EasyFlow
+  name: access_cookie
+preauthorized:
+  emails:
+  - melsby@gmail.com
