@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 import yaml
 from apps.security import registration
+from apps.security import psw_reset
 import apps.security.authentication_service as auth_service
 
 from multipage_backbone import MultiPages
@@ -34,6 +35,7 @@ if st.session_state['authentication_status']:
     # For adding app, the python file should be in the apps folder first and call the app as page() for making it clean here.
     # Example --> page.add_page("Name which will be shown in the markdown page", python script with .page)
     page.add_page("Analysis and Visualization", single_experiment.page)
+    page.add_page("Password reset", psw_reset.page)
     # The main app
 
 

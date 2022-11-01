@@ -141,7 +141,6 @@ class Authenticate:
             try:
                 if self._check_pw():
                     if inplace:
-                        st.write("reached")
                         st.session_state['name'] = self.credentials['usernames'][self.username]['name']
                         self.exp_date = self._set_exp_date()
                         self.token = self._token_encode()

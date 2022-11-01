@@ -26,35 +26,32 @@ def add_credentials_to_db(credentials):
     old_and_new_users = list(credentials['usernames'].keys())
     for user in old_and_new_users:
         if user not in existing_users:
-
-            #st.write('start fetching')
             creds = credentials['usernames']
-            #st.write(creds)
             email = creds[user]['email']
-            #st.write(email)
             username = user
-            #st.write(username)
             psw_hash = creds[user]['password']
-            #st.write(psw_hash)
             affiliation = creds[user]['affiliation']
-            #st.write(affiliation)
             fullname = str(creds[user]['name']).split(" ")
             firstname = fullname[0]
-            #st.write("1st" + firstname)
             lastname = fullname[1]
-            #st.write("2nd" + lastname)
             conn = mysql.connector.connect(**st.secrets["mysql"])
             cursor = conn.cursor()
-            #st.write('after fetching')
             query = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
                     "VALUES (%s,%s,%s,%s,%s,%s);"
-            # .format(email, username, psw_hash, firstname, lastname, affiliation)
             val = (email, username, psw_hash, firstname, lastname, affiliation)
-            #st.write(val)
-            # query = "INSERT INTO User(user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
-            #        "VALUES ('manual@mail.com', 'manual', 'hash', 'Manu', 'Al', 'Mental');"
             cursor.execute(query, val)
-            #st.write('executed')
             conn.commit()
             cursor.close()
             conn.close()
+
+def update_password(credentials):
+    username = st.session_state['username']
+    new_psw = credentials['usernames'][username]['password']
+    conn = mysql.connector.connect(**st.secrets["mysql"])
+    cursor = conn.cursor()
+    query = "UPDATE `EasyFlow`.`User` set `password_hash` = %s where (`username` = %s);"
+    vals = (new_psw, username)
+    cursor.execute(query, vals)
+    conn.commit()
+    cursor.close()
+    conn.close()
