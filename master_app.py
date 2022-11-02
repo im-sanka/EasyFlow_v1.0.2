@@ -37,6 +37,6 @@ elif st.session_state['authentication_status']:
     page.add_page("Password reset", psw_reset.page)
     # The main app
 elif not st.session_state["authentication_status"]:
-    auth_service.enable_login()
+    st.sidebar.error("Wrong username or password")
 
 page.run()
