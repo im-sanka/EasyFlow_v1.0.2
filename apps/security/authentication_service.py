@@ -3,6 +3,7 @@ import yaml
 import streamlit as st
 from apps.security.credentials import get_credentials
 from apps.security.credentials import add_credentials_to_db
+from apps.security.credentials import update_password
 from yaml import SafeLoader
 
 
@@ -24,6 +25,15 @@ def enable_login():
 
 def enable_logout():
     st.session_state['authenticator'].logout('Logout', 'sidebar')
+
+def enable_psw_reset():
+    try:
+        cur_user_username = st.session_state['username']
+        if st.session_state['authenticator'].reset_password(cur_user_username, 'Password Reset', location='main'):
+            update_password(st.session_state['authenticator'].credentials)
+            st.success("Password changed successfully")
+    except Exception as e:
+        st.error(e)
 
 
 def enable_registration(authenticator):

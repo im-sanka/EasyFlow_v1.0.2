@@ -12,7 +12,11 @@ def get_credentials() -> dict:
     # Aggregate credentials
     for row in rows:
         username = row[2]
-        name = row[5] + " " + row[6]
+        name = None
+        if row[6] is not None:
+            name = row[5] + " " + row[6]
+        else:
+            name = row[5]
         email = row[1]
         psw = row[3]
         affiliation = row[7]
@@ -26,35 +30,45 @@ def add_credentials_to_db(credentials):
     old_and_new_users = list(credentials['usernames'].keys())
     for user in old_and_new_users:
         if user not in existing_users:
-
-            #st.write('start fetching')
             creds = credentials['usernames']
-            #st.write(creds)
             email = creds[user]['email']
-            #st.write(email)
             username = user
-            #st.write(username)
             psw_hash = creds[user]['password']
-            #st.write(psw_hash)
             affiliation = creds[user]['affiliation']
-            #st.write(affiliation)
             fullname = str(creds[user]['name']).split(" ")
             firstname = fullname[0]
-            #st.write("1st" + firstname)
-            lastname = fullname[1]
-            #st.write("2nd" + lastname)
+            lastname = None
+            if len(fullname) == 2:
+                lastname = fullname[1]
             conn = mysql.connector.connect(**st.secrets["mysql"])
             cursor = conn.cursor()
-            #st.write('after fetching')
-            query = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
+            query_with_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
                     "VALUES (%s,%s,%s,%s,%s,%s);"
-            # .format(email, username, psw_hash, firstname, lastname, affiliation)
-            val = (email, username, psw_hash, firstname, lastname, affiliation)
-            #st.write(val)
-            # query = "INSERT INTO User(user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
-            #        "VALUES ('manual@mail.com', 'manual', 'hash', 'Manu', 'Al', 'Mental');"
-            cursor.execute(query, val)
-            #st.write('executed')
+            query_no_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, affiliation) " \
+                    "VALUES (%s,%s,%s,%s,%s);"
+            vals1 = (email, username, psw_hash, firstname, lastname, affiliation)
+            vals2 = (email, username, psw_hash, firstname, affiliation)
+            if lastname is not None:
+                cursor.execute(query_with_ln, vals1)
+            else:
+                cursor.execute(query_no_ln, vals2)
             conn.commit()
             cursor.close()
             conn.close()
+
+def update_password(credentials):
+    username = st.session_state['username']
+    new_psw = credentials['usernames'][username]['password']
+    conn = mysql.connector.connect(**st.secrets["mysql"])
+    cursor = conn.cursor()
+    query = "UPDATE `EasyFlow`.`User` set `password_hash` = %s where (`username` = %s);"
+    vals = (new_psw, username)
+    cursor.execute(query, vals)
+    conn.commit()
+    cursor.close()
+    conn.close()
+    st.session_state['logout'] = True
+    st.session_state['name'] = None
+    st.session_state['username'] = None
+    st.session_state['authentication_status'] = None
+    st.session_state['affiliation'] = None
