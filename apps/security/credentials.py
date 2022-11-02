@@ -55,3 +55,8 @@ def update_password(credentials):
     conn.commit()
     cursor.close()
     conn.close()
+    st.session_state['logout'] = True
+    st.session_state['name'] = None
+    st.session_state['username'] = None
+    st.session_state['authentication_status'] = None
+    st.session_state['affiliation'] = None

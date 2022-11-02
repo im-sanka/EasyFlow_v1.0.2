@@ -283,6 +283,7 @@ class Authenticate:
                     if new_password == new_password_repeat:
                         if self.password != new_password:
                             self._update_password(self.username, new_password)
+                            self.cookie_manager.delete(self.cookie_name)
                             return True
                         else:
                             raise ResetError('New and current passwords are the same')
