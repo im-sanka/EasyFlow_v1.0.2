@@ -364,17 +364,20 @@ class Authenticate:
             if len(new_email) and len(new_username) and len(new_name) and len(new_affiliation) and len(new_password) > 0:
                 if new_username not in self.credentials['usernames']:
                     if new_password == new_password_repeat:
-                        if preauthorization:
-                            if new_email in self.preauthorized['emails']:
+                        if len(new_password) > 7:
+                            if preauthorization:
+                                if new_email in self.preauthorized['emails']:
+                                    self._register_credentials(new_username, new_name, new_password, new_email,
+                                                               new_affiliation, preauthorization)
+                                    return True
+                                else:
+                                    raise RegisterError('User not pre-authorized to register')
+                            else:
                                 self._register_credentials(new_username, new_name, new_password, new_email,
                                                            new_affiliation, preauthorization)
                                 return True
-                            else:
-                                raise RegisterError('User not pre-authorized to register')
                         else:
-                            self._register_credentials(new_username, new_name, new_password, new_email,
-                                                       new_affiliation, preauthorization)
-                            return True
+                            raise RegisterError("Password should consist of at least 8 characters")
                     else:
                         raise RegisterError('Passwords do not match')
                 else:

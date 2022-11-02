@@ -12,7 +12,11 @@ def get_credentials() -> dict:
     # Aggregate credentials
     for row in rows:
         username = row[2]
-        name = row[5] + " " + row[6]
+        name = None
+        if row[6] is not None:
+            name = row[5] + " " + row[6]
+        else:
+            name = row[5]
         email = row[1]
         psw = row[3]
         affiliation = row[7]
@@ -33,13 +37,21 @@ def add_credentials_to_db(credentials):
             affiliation = creds[user]['affiliation']
             fullname = str(creds[user]['name']).split(" ")
             firstname = fullname[0]
-            lastname = fullname[1]
+            lastname = None
+            if len(fullname) == 2:
+                lastname = fullname[1]
             conn = mysql.connector.connect(**st.secrets["mysql"])
             cursor = conn.cursor()
-            query = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
+            query_with_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
                     "VALUES (%s,%s,%s,%s,%s,%s);"
-            val = (email, username, psw_hash, firstname, lastname, affiliation)
-            cursor.execute(query, val)
+            query_no_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, affiliation) " \
+                    "VALUES (%s,%s,%s,%s,%s);"
+            vals1 = (email, username, psw_hash, firstname, lastname, affiliation)
+            vals2 = (email, username, psw_hash, firstname, affiliation)
+            if lastname is not None:
+                cursor.execute(query_with_ln, vals1)
+            else:
+                cursor.execute(query_no_ln, vals2)
             conn.commit()
             cursor.close()
             conn.close()
