@@ -6,7 +6,9 @@ from apps.security.credentials import add_credentials_to_db
 from apps.security.credentials import update_password
 from yaml import SafeLoader
 
+# A simple service layer that deals with authentication
 
+# Initialise authenticator for future use
 def authenticate():
     with open('apps/security/config.yaml') as auth_config_file:
         auth_config = yaml.load(auth_config_file, Loader=SafeLoader)
