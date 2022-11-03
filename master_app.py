@@ -1,13 +1,9 @@
 import streamlit as st
 from PIL import Image
-from apps.security import registration
-from apps.security import psw_reset
+from apps.pages import psw_reset, registration, instruction, home, single_experiment
 import apps.security.authentication_service as auth_service
 
 from multipage_backbone import MultiPages
-from apps import single_experiment, instruction
-from apps import home
-
 
 # This line keeps the page as a wide version of page.
 st.set_page_config(layout="wide", initial_sidebar_state="expanded")

@@ -9,7 +9,7 @@ def page():
         btn = streamlit.download_button(
             label="Download dummy data",
             data=file,
-            file_name="dummy_data.csv"
+            file_name="../dummy_data.csv"
         )
     # # Introduction
     # streamlit.header("This section will help you to use EasyFlow.")
