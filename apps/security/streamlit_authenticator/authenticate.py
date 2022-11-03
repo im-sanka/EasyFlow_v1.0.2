@@ -136,6 +136,8 @@ class Authenticate:
         -------
         bool
             Validity of entered credentials.
+
+        Modified by Daniel, added assignation of affiliation.
         """
         if self.username in self.credentials['usernames']:
             try:
@@ -162,7 +164,10 @@ class Authenticate:
                 st.session_state['authentication_status'] = False
             else:
                 return False
-
+    """
+    Modified, now returns affiliation. 
+    Return variables are not used anywhere currently.
+    """
     def login(self, form_name: str, location: str = 'main') -> tuple:
         """
         Creates a login widget.
@@ -204,6 +209,7 @@ class Authenticate:
         return st.session_state['name'], st.session_state['authentication_status'], \
                st.session_state['username'], st.session_state['affiliation']
 
+    # Modified by Daniel. Added removal of affiliation from session_state
     def logout(self, button_name: str, location: str = 'main'):
         """
         Creates a logout button.
@@ -263,6 +269,8 @@ class Authenticate:
         -------
         str
             The status of resetting the password.
+
+        Modified by Daniel. Upped minimal length of password from 0 to 8.
         """
         if location not in ['main', 'sidebar']:
             raise ValueError("Location must be one of 'main' or 'sidebar'")
@@ -279,7 +287,7 @@ class Authenticate:
 
         if reset_password_form.form_submit_button('Reset'):
             if self._check_credentials(inplace=False):
-                if len(new_password) > 0:
+                if len(new_password) > 7:
                     if new_password == new_password_repeat:
                         if self.password != new_password:
                             self._update_password(self.username, new_password)
@@ -290,7 +298,7 @@ class Authenticate:
                     else:
                         raise ResetError('Passwords do not match')
                 else:
-                    raise ResetError('No new password provided')
+                    raise ResetError('No new password provided or password consists of less than 8 characters')
             else:
                 raise CredentialsError
 
@@ -325,6 +333,8 @@ class Authenticate:
         st.write(self.username + self.password)
         self._check_credentials()
 
+    # TODO: add username format check, name should not contain special characters as it creates problems with uploaded
+    #  file names
     def register_user(self, form_name: str, location: str = 'main', preauthorization=True) -> bool:
         """
         Creates a password reset widget.
@@ -342,6 +352,8 @@ class Authenticate:
         -------
         bool
             The status of registering the new user, True: user registered successfully.
+
+        Modified by Daniel. Added password length check and affiliation to registration form.
         """
         if not self.preauthorized:
             raise ValueError("Pre-authorization argument must not be None")

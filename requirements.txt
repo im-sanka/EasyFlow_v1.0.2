@@ -9,7 +9,6 @@ streamlit==1.13.0
 xlrd < 2.0.1
 openpyxl < 3.0.7
 pi
-streamlit-authenticator
 PyYAML~=6.0
 PyJWT
 bcrypt

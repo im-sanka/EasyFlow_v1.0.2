@@ -11,7 +11,7 @@ from apps.render_basic_plots import render_label_based_plot, render_size_signal_
 #     render_growth_heterogeneity_module
 # from apps.render_polydisperse_analysis import render_size_distribution_in_polydisperse_module
 from apps.render_threshold import render_threshold
-from apps.upload_data import data_frame_by_rendering_file_upload_section
+from apps.drolpet_data.droplet_data_service import data_frame_by_rendering_file_upload_section
 
 
 
