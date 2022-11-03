@@ -1,6 +1,6 @@
 import streamlit as st
 import mysql.connector
-import streamlit as st
+
 
 def get_credentials() -> dict:
     conn = mysql.connector.connect(**st.secrets["mysql"])
@@ -32,7 +32,6 @@ def add_credentials_to_db(credentials):
         if user not in existing_users:
             creds = credentials['usernames']
             email = creds[user]['email']
-            username = user
             psw_hash = creds[user]['password']
             affiliation = creds[user]['affiliation']
             fullname = str(creds[user]['name']).split(" ")
@@ -40,21 +39,27 @@ def add_credentials_to_db(credentials):
             lastname = None
             if len(fullname) == 2:
                 lastname = fullname[1]
+
             conn = mysql.connector.connect(**st.secrets["mysql"])
             cursor = conn.cursor()
-            query_with_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
-                    "VALUES (%s,%s,%s,%s,%s,%s);"
+
+            query_with_ln = \
+                "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
+                "VALUES (%s,%s,%s,%s,%s,%s);"
             query_no_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, affiliation) " \
-                    "VALUES (%s,%s,%s,%s,%s);"
-            vals1 = (email, username, psw_hash, firstname, lastname, affiliation)
-            vals2 = (email, username, psw_hash, firstname, affiliation)
+                          "VALUES (%s,%s,%s,%s,%s);"
+
+            vals1 = (email, user, psw_hash, firstname, lastname, affiliation)
+            vals2 = (email, user, psw_hash, firstname, affiliation)
             if lastname is not None:
                 cursor.execute(query_with_ln, vals1)
             else:
                 cursor.execute(query_no_ln, vals2)
+
             conn.commit()
             cursor.close()
             conn.close()
+
 
 def update_password(credentials):
     username = st.session_state['username']
@@ -68,7 +73,5 @@ def update_password(credentials):
     cursor.close()
     conn.close()
     st.session_state['logout'] = True
-    st.session_state['name'] = None
-    st.session_state['username'] = None
-    st.session_state['authentication_status'] = None
-    st.session_state['affiliation'] = None
+    st.session_state['name'], st.session_state['username'], st.session_state['authentication_status'], \
+        st.session_state['affiliation'] = None, None, None, None

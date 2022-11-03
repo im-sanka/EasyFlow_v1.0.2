@@ -333,6 +333,8 @@ class Authenticate:
         st.write(self.username + self.password)
         self._check_credentials()
 
+    # TODO: add username format check, name should not contain special characters as it creates problems with uploaded
+    #  file names
     def register_user(self, form_name: str, location: str = 'main', preauthorization=True) -> bool:
         """
         Creates a password reset widget.
