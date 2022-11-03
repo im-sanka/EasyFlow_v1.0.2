@@ -1,9 +1,7 @@
 import streamlit as st
 from PIL import Image
-import yaml
 from apps.security import registration
 from apps.security import psw_reset
-from apps.security import login
 import apps.security.authentication_service as auth_service
 
 from multipage_backbone import MultiPages
