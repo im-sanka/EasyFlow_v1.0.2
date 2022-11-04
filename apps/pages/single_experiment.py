@@ -11,7 +11,7 @@ from apps.render_basic_plots import render_label_based_plot, render_size_signal_
 #     render_growth_heterogeneity_module
 # from apps.render_polydisperse_analysis import render_size_distribution_in_polydisperse_module
 from apps.render_threshold import render_threshold
-from apps.drolpet_data.droplet_data_service import data_frame_by_rendering_file_upload_section
+from apps.drolpet_data.droplet_data_service import data_frame_by_rendering_file_selection
 
 
 
@@ -26,7 +26,7 @@ def page():
     #     "comparison between sizes and signals with threshold classification and condition/label-based data.")
     # streamlit.write("* If you wish to contribute or put your Python script as one of the modules here, let me know at immanuel.sanka[at]taltech[dot]ee")
     # Initialize page and get uploaded file data
-    data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_upload_section()
+    data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_selection()
 
     if data_frame is None:
         return
@@ -54,7 +54,10 @@ def page():
             render_size_signal_plot(data_frame, threshold)
             render_label_based_plot(data_frame, threshold)
 
-        except:
+        except Exception as e:
+            # NB! Warning is not sufficient as error may occur because of old libraries
+            streamlit.write(e)
+            print(e)
             streamlit.warning("Please adjust the file input accordingly. For further explanation, check the 'Instruction' tab")
         #
         # streamlit.header("")
