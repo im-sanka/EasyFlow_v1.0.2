@@ -335,6 +335,8 @@ class Authenticate:
 
     # TODO: add username format check, name should not contain special characters as it creates problems with uploaded
     #  file names
+
+    # TODO: make sure there can't exist several users with same usernames, maybe emails too
     def register_user(self, form_name: str, location: str = 'main', preauthorization=True) -> bool:
         """
         Creates a password reset widget.
