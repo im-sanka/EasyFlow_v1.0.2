@@ -7,45 +7,51 @@ from pandas import DataFrame
 import mysql.connector
 
 def store_droplet_data():
-    data_description = st.text_area('Description of your droplet data.',)
-    is_public = st.checkbox("Let others use this dataset?",  value=True)
-    uploaded_file = st.file_uploader(
-        "You can upload .CSV or .XLSX files.",
-        type=["xlsx", "csv"]
-    )
-    if st.button("Store my data"):
-        if uploaded_file:
-            filename = uploaded_file.name
-            file_size = uploaded_file.size
-            date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            username = st.session_state['username']
-            full_path = store_data_on_machine(uploaded_file, username, date_time, filename)
-            store_data_in_database(full_path, username, date_time, data_description, is_public, file_size, filename)
-        else:
-            st.warning("Upload the correct file!")
+    with st.form("Upload your droplet data", clear_on_submit=True):
+        data_description = st.text_area('Description of your droplet data.',)
+        is_public = st.checkbox("Let others use this dataset?",  value=True)
+        uploaded_file = st.file_uploader(
+            "You can upload .CSV or .XLSX files.",
+            type=["xlsx", "csv"]
+        )
+        submitted = st.form_submit_button("UPLOAD!")
+        if submitted:
+            if uploaded_file:
+                filename = uploaded_file.name
+                file_size = uploaded_file.size
+                date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                username = st.session_state['username']
+                if uploaded_file.type == "text/csv":
+                    data_type = "csv"
+                else:
+                    data_type = "xlsx"
+                full_path, filename = store_data_on_machine(uploaded_file, username, date_time, filename, data_type)
+                store_data_in_database(full_path, username, date_time, data_description, is_public, file_size, filename, data_type)
+            else:
+                st.warning("Upload the correct file!")
 
 
-def store_data_on_machine(file, username, date_time, filename):
-    save_path = "/home/daniel/easyflow/storage/droplet_data"
-    # save_path = "/home/ubuntu/storage/droplet_data"
-
-    fullname = None
-    if file.type == "text/csv":
-        fullname = filename[:len(filename)-3] + "_" + username + "_" + str(date_time) + ".csv"
+def store_data_on_machine(file, username, date_time, filename, data_type):
+    save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    # save_path = "/home/ubuntu/storage/droplet_data/"
+    if data_type == "csv":
+        filename = filename[:len(filename)-4]
     else:
-        fullname = filename[:len(filename) - 4] + "_" + username + "_" + str(date_time) + ".xlsx"
-    full_path = save_path + "/" + fullname
+        filename = filename[:len(filename)-5]
+    fullname = filename + "_" + username + "_" + str(date_time) + "." + data_type
+    full_path = save_path + fullname
     with open(os.path.join(save_path, fullname), "wb") as f:
         f.write(file.getbuffer())
         f.close()
-    return full_path
-def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename):
+    return full_path, filename
+def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename, data_type):
     conn = mysql.connector.connect(**st.secrets["mysql"])
     cursor = conn.cursor()
     user_id = get_user_id(username)
+    st.write(data_type)
     insert_query = "INSERT INTO Analysis_data (uploader, upload_datetime, public, file_size_bytes,file_path, " \
-                   "analysis_data_description, analysis_data_name) VALUES (%s,%s,%s,%s,%s,%s,%s)"
-    vals = [user_id, date_time, is_public, file_size, full_path, description, filename]
+                   "analysis_data_description, analysis_data_name, data_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+    vals = [user_id, date_time, is_public, file_size, full_path, description, filename, data_type]
     cursor.execute(insert_query, vals)
     conn.commit()
     cursor.close()
@@ -115,8 +121,8 @@ def get_all_data_options():
     user_id = [get_user_id(st.session_state['username'])]
     conn = mysql.connector.connect(**st.secrets["mysql"])
     cursor = conn.cursor()
-    query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data, User WHERE uploader=user_id " \
-            "AND (user_id=%s OR public); "
+    query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data, User " \
+            "WHERE uploader=user_id AND (user_id=%s OR public); "
     cursor.execute(query, user_id)
     rows = cursor.fetchall()
     for row in rows:
@@ -127,4 +133,43 @@ def get_all_data_options():
     conn.close()
     return options, options_dict
 
+def get_all_owned_droplet_data():
+    droplet_data_dict = {}
+    conn = mysql.connector.connect(**st.secrets["mysql"])
+    cursor = conn.cursor()
+    query = "SELECT " \
+            "analysis_data_id, upload_datetime, file_path, analysis_data_description, analysis_data_name, data_type " \
+            "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s OR public);"
+    cursor.execute(query, [st.session_state['username']])
+    rows = cursor.fetchall()
+    for row in rows:
+        droplet_data_dict[row[0]] = \
+            {'upload time': row[1], 'filepath': row[2], 'description': row[3], 'filename': row[4], 'data_type': row[5]}
+    cursor.close()
+    conn.close()
+    return droplet_data_dict
+
+def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
+    os.remove(filepath)
+    conn = mysql.connector.connect(**st.secrets["mysql"])
+    cursor = conn.cursor()
+    query = "DELETE FROM Analysis_data WHERE analysis_data_id=%s;"
+    cursor.execute(query, [droplet_analysis_id])
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
+    path = "/home/daniel/easyflow/storage/droplet_data/"
+    old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
+    new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
+    os.rename(old_path, new_path)
+    conn = mysql.connector.connect(**st.secrets["mysql"])
+    cursor = conn.cursor()
+    query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
+            f"WHERE analysis_data_id={data_id}"
+    cursor.execute(query)
+    conn.commit()
+    cursor.close()
+    conn.close()
 

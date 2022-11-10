@@ -1,6 +1,11 @@
 import streamlit as st
 import mysql.connector
 
+"""
+Fetch users' credentials form database
+
+Will be used to initialise authenticator 
+"""
 
 def get_credentials() -> dict:
     conn = mysql.connector.connect(**st.secrets["mysql"])
@@ -24,6 +29,9 @@ def get_credentials() -> dict:
     return creds
 
 
+"""
+Add registered user credentials to database
+"""
 def add_credentials_to_db(credentials):
     existing_creds = get_credentials()
     existing_users = list(existing_creds['usernames'].keys())
@@ -42,13 +50,11 @@ def add_credentials_to_db(credentials):
 
             conn = mysql.connector.connect(**st.secrets["mysql"])
             cursor = conn.cursor()
-
             query_with_ln = \
                 "INSERT INTO User (user_e_mail, username, password_hash, firstname, lastname, affiliation) " \
                 "VALUES (%s,%s,%s,%s,%s,%s);"
             query_no_ln = "INSERT INTO User (user_e_mail, username, password_hash, firstname, affiliation) " \
                           "VALUES (%s,%s,%s,%s,%s);"
-
             vals1 = (email, user, psw_hash, firstname, lastname, affiliation)
             vals2 = (email, user, psw_hash, firstname, affiliation)
             if lastname is not None:
