@@ -1,5 +1,5 @@
 import streamlit as st
-from apps.drolpet_data.droplet_data_service import get_all_owned_droplet_data, delete_owned_droplet_dataset, rename_droplet_data
+from apps.services.droplet_data_service import get_all_owned_droplet_data, delete_owned_droplet_dataset, rename_droplet_data
 
 def page():
     owned_droplet_datasets = get_all_owned_droplet_data()

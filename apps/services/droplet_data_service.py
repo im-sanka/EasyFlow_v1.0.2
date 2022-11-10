@@ -5,6 +5,7 @@ import datetime
 import pandas
 from pandas import DataFrame
 import mysql.connector
+from apps.services.database_service import execute_query, execute_query_to_get_data
 
 def store_droplet_data():
     with st.form("Upload your droplet data", clear_on_submit=True):
@@ -45,17 +46,11 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
         f.close()
     return full_path, filename
 def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename, data_type):
-    conn = mysql.connector.connect(**st.secrets["mysql"])
-    cursor = conn.cursor()
     user_id = get_user_id(username)
-    st.write(data_type)
     insert_query = "INSERT INTO Analysis_data (uploader, upload_datetime, public, file_size_bytes,file_path, " \
                    "analysis_data_description, analysis_data_name, data_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
     vals = [user_id, date_time, is_public, file_size, full_path, description, filename, data_type]
-    cursor.execute(insert_query, vals)
-    conn.commit()
-    cursor.close()
-    conn.close()
+    execute_query(insert_query, vals)
 
 def data_frame_by_rendering_file_selection():
     upload = st.checkbox("Upload file from system")
@@ -103,14 +98,9 @@ def data_frame_by_file_selection() -> Union[dict[Any, DataFrame], DataFrame, Non
 
 
 def get_user_id(username):
-    conn = mysql.connector.connect(**st.secrets["mysql"])
-    cursor = conn.cursor()
     user_id_query = "SELECT user_id FROM User WHERE username=%s"
     val1 = [username]
-    cursor.execute(user_id_query, val1)
-    user_id = cursor.fetchall()[0][0]
-    cursor.close()
-    conn.close()
+    user_id = execute_query_to_get_data(user_id_query, val1)[0][0]
     return user_id
 
 def get_all_data_options():
@@ -119,57 +109,37 @@ def get_all_data_options():
     options_dict = {}
     options = ["Select data set you want"]
     user_id = [get_user_id(st.session_state['username'])]
-    conn = mysql.connector.connect(**st.secrets["mysql"])
-    cursor = conn.cursor()
     query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data, User " \
             "WHERE uploader=user_id AND (user_id=%s OR public); "
-    cursor.execute(query, user_id)
-    rows = cursor.fetchall()
+    rows = execute_query_to_get_data(query, user_id)
     for row in rows:
         option = row[0] + ", by " + row[1] + " " + str(row[2])
         options_dict[option] = {'username': row[1], 'filename': row[0], 'time': str(row[2]), 'path': row[3]}
         options.append(option)
-    cursor.close()
-    conn.close()
     return options, options_dict
 
 def get_all_owned_droplet_data():
     droplet_data_dict = {}
-    conn = mysql.connector.connect(**st.secrets["mysql"])
-    cursor = conn.cursor()
     query = "SELECT " \
             "analysis_data_id, upload_datetime, file_path, analysis_data_description, analysis_data_name, data_type " \
             "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s OR public);"
-    cursor.execute(query, [st.session_state['username']])
-    rows = cursor.fetchall()
+    rows = execute_query_to_get_data(query, [st.session_state['username']])
     for row in rows:
         droplet_data_dict[row[0]] = \
             {'upload time': row[1], 'filepath': row[2], 'description': row[3], 'filename': row[4], 'data_type': row[5]}
-    cursor.close()
-    conn.close()
     return droplet_data_dict
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
     os.remove(filepath)
-    conn = mysql.connector.connect(**st.secrets["mysql"])
-    cursor = conn.cursor()
     query = "DELETE FROM Analysis_data WHERE analysis_data_id=%s;"
-    cursor.execute(query, [droplet_analysis_id])
-    conn.commit()
-    cursor.close()
-    conn.close()
+    execute_query(query, [droplet_analysis_id])
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     path = "/home/daniel/easyflow/storage/droplet_data/"
     old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     os.rename(old_path, new_path)
-    conn = mysql.connector.connect(**st.secrets["mysql"])
-    cursor = conn.cursor()
     query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
             f"WHERE analysis_data_id={data_id}"
-    cursor.execute(query)
-    conn.commit()
-    cursor.close()
-    conn.close()
+    execute_query(query)
 

@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 from apps.pages import store_data, psw_reset, registration, instruction, home, single_experiment, management
-import apps.security.authentication_service as auth_service
+import apps.services.authentication_service as auth_service
 from multipage_backbone import MultiPages
 
 # This line keeps the page as a wide version of page.
