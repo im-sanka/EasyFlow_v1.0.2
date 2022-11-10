@@ -1,6 +1,6 @@
 import streamlit as st
 from PIL import Image
-from apps.pages import store_data, psw_reset, registration, instruction, home, single_experiment, management
+from apps.pages import store_data, psw_reset, registration, instruction, home, single_experiment, data_overview
 import apps.services.authentication_service as auth_service
 from multipage_backbone import MultiPages
 
@@ -14,7 +14,7 @@ auth_service.authenticate()
 image = Image.open('files/banner_new3.png')
 
 page.add_page("Home", home.page)
-page.add_page("management", management.page)
+page.add_page("Data overview", data_overview.page)
 auth_service.enable_login()
 
 if st.session_state['authentication_status'] is None:
