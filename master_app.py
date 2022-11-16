@@ -14,12 +14,12 @@ auth_service.authenticate()
 image = Image.open('files/banner_new3.png')
 
 page.add_page("Home", home.page)
-page.add_page("Data overview", data_overview.page)
 auth_service.enable_login()
 
 if st.session_state['authentication_status'] is None:
     page.add_page("Registration", registration.page)
 elif st.session_state['authentication_status']:
+    page.add_page("Data overview", data_overview.page)
     auth_service.enable_logout()
     st.write(f"Welcome {st.session_state['name']}")
     # Add all your applications (pages) here

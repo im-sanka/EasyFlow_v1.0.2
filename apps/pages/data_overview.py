@@ -17,7 +17,7 @@ def page():
             with renaming:
                 with st.form(key=f"rename {str(data_id)}", clear_on_submit=True):
                     st.warning("Write the old name of droplet data to confirm your intent")
-                    old_name = st.text_input("Old name")
+                    old_name = st.text_input("Old name", filename)
                     new_name = st.text_input("New name")
                     submit = st.form_submit_button("RENAME!")
                     if submit:

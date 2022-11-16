@@ -1,12 +1,19 @@
-import streamlit
+import streamlit as st
 
 
 # This just to declare the home page
 
 def page():
     # Main page layout
-    streamlit.header("EasyFlow processes results from image analysis software.")
-    streamlit.subheader("Current version hosts:")
+    st.header("EasyFlow processes results from image analysis software.")
+    st.subheader("Current version hosts:")
+    if st.button("1st", key="1st"):
+        st.write("1st")
+        st.session_state["1st"] = True
+        if st.session_state["1st"] and st.button("2nd", key="2nd"):
+            st.session_state["1st"] = False
+            st.write("2nd")
+
     #streamlit.write(
     #    "- **Basic Module**: This module generates plots for sizes, signals, "
     #    "comparison between sizes and signals with threshold classification and condition/label-based data.")
