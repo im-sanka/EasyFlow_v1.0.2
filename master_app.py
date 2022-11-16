@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
-from apps.pages import store_data, psw_reset, registration, instruction, home, single_experiment
-import apps.security.authentication_service as auth_service
+from apps.pages import store_data, psw_reset, registration, instruction, home, single_experiment, data_overview
+import apps.services.authentication_service as auth_service
 from multipage_backbone import MultiPages
 
 # This line keeps the page as a wide version of page.
@@ -19,6 +19,7 @@ auth_service.enable_login()
 if st.session_state['authentication_status'] is None:
     page.add_page("Registration", registration.page)
 elif st.session_state['authentication_status']:
+    page.add_page("Data overview", data_overview.page)
     auth_service.enable_logout()
     st.write(f"Welcome {st.session_state['name']}")
     # Add all your applications (pages) here

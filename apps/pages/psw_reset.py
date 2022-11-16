@@ -1,5 +1,5 @@
 import streamlit as st
-from apps.security.authentication_service import enable_psw_reset
+from apps.services.authentication_service import enable_psw_reset
 
 
 def page():

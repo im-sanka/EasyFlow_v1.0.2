@@ -207,7 +207,7 @@ class Authenticate:
                     self._check_credentials()
 
         return st.session_state['name'], st.session_state['authentication_status'], \
-               st.session_state['username'], st.session_state['affiliation']
+            st.session_state['username'], st.session_state['affiliation']
 
     # Modified by Daniel. Added removal of affiliation from session_state
     def logout(self, button_name: str, location: str = 'main'):
@@ -302,7 +302,10 @@ class Authenticate:
             else:
                 raise CredentialsError
 
-    def _register_credentials(self, username: str, name: str, password: str, email: str, affiliation: str, preauthorization: bool):
+    """
+    Modified by Daniel. Removed typical yankee typo from "preauthorisation"
+    """
+    def _register_credentials(self, username: str, name: str, password: str, email: str, affiliation: str, preauthorisation: bool):
         """
         Adds to credentials dictionary the new user's information.
 
@@ -324,7 +327,7 @@ class Authenticate:
                                                    'password': Hasher([password]).generate()[0],
                                                    'affiliation': affiliation,
                                                    'email': email}
-        if preauthorization:
+        if preauthorisation:
             self.preauthorized['emails'].remove(email)
         self._check_cookie()
         st.session_state['username'] = self.username
@@ -335,8 +338,6 @@ class Authenticate:
 
     # TODO: add username format check, name should not contain special characters as it creates problems with uploaded
     #  file names
-
-    # TODO: make sure there can't exist several users with same usernames, maybe emails too
     def register_user(self, form_name: str, location: str = 'main', preauthorization=True) -> bool:
         """
         Creates a password reset widget.
