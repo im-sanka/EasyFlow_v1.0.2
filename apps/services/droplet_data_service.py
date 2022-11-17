@@ -33,8 +33,8 @@ def store_droplet_data():
 
 
 def store_data_on_machine(file, username, date_time, filename, data_type):
-    save_path = "/home/daniel/easyflow/storage/droplet_data/"
-    # save_path = "/home/ubuntu/storage/droplet_data/"
+    # save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    save_path = "/home/ubuntu/storage/droplet_data/"
     if data_type == "csv":
         filename = filename[:len(filename)-4]
     else:
@@ -135,7 +135,8 @@ def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
     execute_query(query, [droplet_analysis_id])
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
-    path = "/home/daniel/easyflow/storage/droplet_data/"
+    # path = "/home/daniel/easyflow/storage/droplet_data/"
+    path = "/home/ubuntu/storage/droplet_data/"
     old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     os.rename(old_path, new_path)
