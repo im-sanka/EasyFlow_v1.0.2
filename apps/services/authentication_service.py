@@ -10,7 +10,8 @@ from yaml import SafeLoader
 
 # Initialise authenticator for future use
 def authenticate():
-    with open('apps/security/config.yaml') as auth_config_file:
+    #with open('apps/security/config.yaml') as auth_config_file:
+    with open('/home/ubuntu/EasyFlow_v2.0.0/apps/security/config.yaml') as auth_config_file:
         auth_config = yaml.load(auth_config_file, Loader=SafeLoader)
     credentials = get_credentials()
     authenticator = auth.Authenticate(
