@@ -33,8 +33,8 @@ def store_droplet_data():
 
 
 def store_data_on_machine(file, username, date_time, filename, data_type):
-    # save_path = "/home/daniel/easyflow/storage/droplet_data/"
-    save_path = "/home/ubuntu/storage/droplet_data/"
+    save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    # save_path = "/home/ubuntu/storage/droplet_data/"
     if data_type == "csv":
         filename = filename[:len(filename)-4]
     else:
@@ -112,7 +112,7 @@ def get_all_data_options():
     options = ["Select data set you want"]
     user_id = [get_user_id(st.session_state['username'])]
     query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data, User " \
-            "WHERE uploader=user_id AND (user_id=%s OR public); "
+            "WHERE uploader=user_id AND active=TRUE AND (user_id=%s OR public); "
     rows = execute_query_to_get_data(query, user_id)
     for row in rows:
         option = row[0] + ", by " + row[1] + " " + str(row[2])
@@ -133,12 +133,12 @@ def get_all_owned_droplet_data():
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
     os.remove(filepath)
-    query = "DELETE FROM Analysis_data WHERE analysis_data_id=%s;"
+    query = "UPDATE Analysis_data SET active=FALSE, file_path=NULL, file_size_bytes=0 WHERE analysis_data_id=%s;"
     execute_query(query, [droplet_analysis_id])
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
-    # path = "/home/daniel/easyflow/storage/droplet_data/"
-    path = "/home/ubuntu/storage/droplet_data/"
+    path = "/home/daniel/easyflow/storage/droplet_data/"
+    # path = "/home/ubuntu/storage/droplet_data/"
     old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     os.rename(old_path, new_path)
