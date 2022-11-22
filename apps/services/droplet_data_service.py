@@ -124,6 +124,7 @@ def get_all_owned_droplet_data():
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
     query = "UPDATE Analysis_data SET active=FALSE WHERE analysis_data_id=%s;"
+   
     execute_query(query, [droplet_analysis_id])
     os.remove(filepath)
 
