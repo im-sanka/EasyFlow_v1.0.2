@@ -12,10 +12,13 @@ from apps.render_basic_plots import render_label_based_plot, render_size_signal_
 # from apps.render_polydisperse_analysis import render_size_distribution_in_polydisperse_module
 from apps.render_threshold import render_threshold
 from apps.services.droplet_data_service import data_frame_by_rendering_file_selection
-
+from apps.services.analysis_settings_service import set_default_settings, save_settings, create_save_form
+from apps.services.analysis_settings_service import save_settings
 
 
 def page():
+    if 'analysis_settings' not in streamlit.session_state:
+        streamlit.session_state['analysis_settings'] = {}
     streamlit.header("EasyFlow processes results from image analysis software")
     explanation = '<p style="font-size:20px">Current version is able to generate instant results with necessary graphs and tables.' \
                   '<br>EasyFlow only requires output data from image analysis software that includes signal, size and label/group data.</p>'
@@ -26,7 +29,12 @@ def page():
     #     "comparison between sizes and signals with threshold classification and condition/label-based data.")
     # streamlit.write("* If you wish to contribute or put your Python script as one of the modules here, let me know at immanuel.sanka[at]taltech[dot]ee")
     # Initialize page and get uploaded file data
-    data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_selection()
+    upload_data, settings = streamlit.columns(2)
+    with upload_data:
+        data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_selection()
+    with settings:
+        with streamlit.expander(label="Save Settings"):
+            create_save_form()
 
     if data_frame is None:
         return
@@ -38,6 +46,9 @@ def page():
     if data_frame is not TypeError or ValueError or KeyError:
     # Graphs starting here
         try:
+            # set default settings for analysis, data frame used to set default threshold
+            set_default_settings(data_frame)
+
             #streamlit.header("Data Visualization")
             #These render the basic modules
             streamlit.subheader("Droplet Sizes Distribution")
@@ -45,6 +56,7 @@ def page():
             streamlit.subheader("Droplet Signals Distribution")
             column1, column2, column3 = streamlit.columns(3)
             threshold = render_threshold(column1, data_frame)
+
             streamlit.info("This threshold will affect the results of three sections below, including their visualizations.")
 
             with streamlit.expander("More information about the threshold", expanded=False):
@@ -53,6 +65,7 @@ def page():
             render_signal_plot(data_frame, threshold)
             render_size_signal_plot(data_frame, threshold)
             render_label_based_plot(data_frame, threshold)
+            streamlit.write(streamlit.session_state['analysis_settings'])
 
         except Exception as e:
             # NB! Warning is not sufficient as error may occur because of old libraries

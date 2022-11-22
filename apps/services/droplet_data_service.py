@@ -4,8 +4,7 @@ import os.path
 import datetime
 import pandas
 from pandas import DataFrame
-import mysql.connector
-from apps.services.database_service import execute_query, execute_query_to_get_data
+from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id
 
 def store_droplet_data():
     with st.form("Upload your droplet data", clear_on_submit=True):
@@ -33,8 +32,8 @@ def store_droplet_data():
 
 
 def store_data_on_machine(file, username, date_time, filename, data_type):
-    # save_path = "/home/daniel/easyflow/storage/droplet_data/"
-    save_path = "/home/ubuntu/storage/droplet_data/"
+    save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    # save_path = "/home/ubuntu/storage/droplet_data/"
     if data_type == "csv":
         filename = filename[:len(filename)-4]
     else:
@@ -97,14 +96,6 @@ def data_frame_by_file_selection() -> Union[dict[Any, DataFrame], DataFrame, Non
         return pandas.read_csv(options_dict[option]['path'])
 
 
-def get_user_id(username):
-    user_id_query = "SELECT user_id FROM User WHERE username=%s"
-    val1 = [username]
-    result = execute_query_to_get_data(user_id_query, val1)
-    print(result)
-    user_id = result[0][0]
-    return user_id
-
 def get_all_data_options():
     # option format - "filename, by username, datetime"
     # option format - "_dummy_data.csv, by dabere, 2022-11-04 00:57:55"
@@ -112,7 +103,7 @@ def get_all_data_options():
     options = ["Select data set you want"]
     user_id = [get_user_id(st.session_state['username'])]
     query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data, User " \
-            "WHERE uploader=user_id AND (user_id=%s OR public); "
+            "WHERE uploader=user_id AND active=TRUE AND (user_id=%s OR public); "
     rows = execute_query_to_get_data(query, user_id)
     for row in rows:
         option = row[0] + ", by " + row[1] + " " + str(row[2])
@@ -132,13 +123,14 @@ def get_all_owned_droplet_data():
     return droplet_data_dict
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
-    query = "DELETE FROM Analysis_data WHERE analysis_data_id=%s;"
-    os.remove(filepath)
+    query = "UPDATE Analysis_data SET active=FALSE WHERE analysis_data_id=%s;"
+   
     execute_query(query, [droplet_analysis_id])
+    os.remove(filepath)
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
-    # path = "/home/daniel/easyflow/storage/droplet_data/"
-    path = "/home/ubuntu/storage/droplet_data/"
+    path = "/home/daniel/easyflow/storage/droplet_data/"
+    # path = "/home/ubuntu/storage/droplet_data/"
     old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     os.rename(old_path, new_path)

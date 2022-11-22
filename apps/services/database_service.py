@@ -20,3 +20,10 @@ def execute_query_to_get_data(query, vals=()):
     conn.close()
     return result
 
+def get_user_id(username):
+    user_id_query = "SELECT user_id FROM User WHERE username=%s"
+    val1 = [username]
+    result = execute_query_to_get_data(user_id_query, val1)
+    print(result)
+    user_id = result[0][0]
+    return user_id
