@@ -300,7 +300,7 @@ def render_signal_plot(data_frame, threshold):
     max_signal = maxi
 
     default_bin = column1.number_input("How many bins do you want to have?", 3)
-    streamlit.write(default_bin)
+    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['bin_nr'] = default_bin
     initial_value = ", ".join(
         [str(round(bin_value, 5)) for bin_value in numpy.linspace(min_signal, max_signal, default_bin + 1)])
 
@@ -317,7 +317,7 @@ def render_signal_plot(data_frame, threshold):
                  "To toggle between 'log' and 'linear' form of the plot, click the tab below.")
 
     bins: list[float] = [float(input_value) for input_value in bins_input_field_value.split(",")]
-    streamlit.write(bins)
+    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['bins'] = bins
     labels: list[str] = [str(round(binValue, 3)) for binValue in bins][1:]
     #
     # slide = column2.slider('You can also adjust your bins by sliding this button:',
@@ -340,12 +340,13 @@ def render_signal_plot(data_frame, threshold):
 
     signals_plot = []
     signalx = column1.text_input("X - axis label:", "Average Pixel Intensity", key="signalx")
-    streamlit.write(signalx)
+    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['signalx'] = signalx
     signaly = column1.text_input("Y - axis label:", "Counts", key="signaly")
-    streamlit.write(signaly)
+    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['signaly'] = signaly
     line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", ["Line", "OFF"],
                              key="line_signal")
-    streamlit.write(line)
+    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['line'] = line
+    streamlit.write(streamlit.session_state['analysis_settings'])
     for axis_type in ["log", "linear"]:
 
         fig_signal = figure(width=600,

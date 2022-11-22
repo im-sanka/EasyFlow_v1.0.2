@@ -132,9 +132,9 @@ def get_all_owned_droplet_data():
     return droplet_data_dict
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
-    os.remove(filepath)
-    query = "UPDATE Analysis_data SET active=FALSE, file_path=NULL, file_size_bytes=0 WHERE analysis_data_id=%s;"
+    query = "UPDATE Analysis_data SET active=FALSE WHERE analysis_data_id=%s;"
     execute_query(query, [droplet_analysis_id])
+    os.remove(filepath)
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     path = "/home/daniel/easyflow/storage/droplet_data/"
