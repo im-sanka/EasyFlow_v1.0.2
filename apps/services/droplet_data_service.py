@@ -132,8 +132,8 @@ def get_all_owned_droplet_data():
     return droplet_data_dict
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
-    os.remove(filepath)
     query = "DELETE FROM Analysis_data WHERE analysis_data_id=%s;"
+    os.remove(filepath)
     execute_query(query, [droplet_analysis_id])
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
