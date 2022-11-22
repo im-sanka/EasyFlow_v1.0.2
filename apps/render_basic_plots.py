@@ -9,7 +9,6 @@ from bokeh.plotting import figure
 seaborn.set_style("white")
 
 
-
 def render_label_based_plot(data_frame, threshold):
     streamlit.subheader("Label-based Droplet Signals Distribution")
 
@@ -23,10 +22,19 @@ def render_label_based_plot(data_frame, threshold):
     Label = data_frame.Label.unique()
 
     # streamlit.write(test)
-    signalx = column1.text_input("X - axis label:", "Group", key="label_basedx")
-    signaly = column1.text_input("Y - axis label:", "Intensity", key="label_basedy")
+    def_x = streamlit.session_state['analysis_settings']['label_signal_distribution']['signalx']
+    signalx = column1.text_input("X - axis label:", def_x, key="label_basedx")
+    streamlit.session_state['analysis_settings']['label_signal_distribution']['signalx'] = signalx
 
-    line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", ["Line", "OFF"], key="line_label")
+    def_y = streamlit.session_state['analysis_settings']['label_signal_distribution']['signaly']
+    signaly = column1.text_input("Y - axis label:", def_y, key="label_basedy")
+    streamlit.session_state['analysis_settings']['label_signal_distribution']['signaly'] = signaly
+
+    options = ["Line", "OFF"]
+    def_line = streamlit.session_state['analysis_settings']['label_signal_distribution']['line']
+    line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", options, key="line_label",
+                             index=def_line)
+    streamlit.session_state['analysis_settings']['label_signal_distribution']['line'] = options.index(line)
 
     label_based = figure(width=400, height=400,
                          x_axis_label=signalx,
@@ -114,11 +122,19 @@ def render_size_signal_plot(data_frame, threshold):
     column1, column2 = streamlit.columns(2)
 
     # streamlit.write(data_frame.Classification.unique())
-    signalx = column1.text_input("X - axis label:", "Volume", key="sizesignalsx")
-    signaly = column1.text_input("Y - axis label:", "Intensity", key="sizesignalsy")
+    def_x = streamlit.session_state['analysis_settings']['relationship_sizes_signals']['signalx']
+    signalx = column1.text_input("X - axis label:", def_x, key="sizesignalsx")
+    streamlit.session_state['analysis_settings']['relationship_sizes_signals']['signalx'] = signalx
 
-    line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", ["Line", "OFF"],
+    def_y = streamlit.session_state['analysis_settings']['relationship_sizes_signals']['signaly']
+    signaly = column1.text_input("Y - axis label:", def_y, key="sizesignalsy")
+    streamlit.session_state['analysis_settings']['relationship_sizes_signals']['signaly'] = signaly
+
+    options = ["Line", "OFF"]
+    def_line = streamlit.session_state['analysis_settings']['relationship_sizes_signals']['line']
+    line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", options, index=def_line,
                              key="line_sizesignal")
+    streamlit.session_state['analysis_settings']['relationship_sizes_signals']['line'] = options.index(line)
 
     size_signal_plot = figure(width=400,
                               height=400,
@@ -166,15 +182,20 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
     max_volume = max(volumes)
 
     column1, column2 = streamlit.columns(2)
-    default_bin = column1.number_input("How many bins do you want to have?", 5)
+    def_bin = streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bin_nr']
+    default_bin = column1.number_input("How many bins do you want to have?", def_bin)
+    streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bin_nr'] = default_bin
     # slider = column1.slider("Check slider", 0, max_volume, default_bin)
-    initial_value = ", ".join(
-        [str(round(bin_value, 5)) for bin_value in numpy.linspace(min_volume, max_volume, default_bin + 1)])
-
+    if streamlit.session_state['analysis_settings']['name'] == "Default":
+        initial_value = ", ".join(
+            [str(round(bin_value, 5)) for bin_value in numpy.linspace(min_volume, max_volume, default_bin + 1)])
+    else:
+        initial_value = streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bins']
     bins_input_field_value: str = column2.text_input(
         "If you want define your bins with your range, insert the boundary values here:",
         initial_value
     )
+    streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bins'] = bins_input_field_value
     column2.warning(
         "**IMPORTANT NOTE**: Bins can be used in any range. We have an example here that goes from 0 up to 4 nL in 14 "
         "bins, e.g. 0, 0.001953125, 0.00390625,  0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4 "
@@ -232,8 +253,12 @@ def render_sizes_plot_histogram(data_frame: pandas.DataFrame):
                 ("Count", "@bottom"),
                 ("Bin", "@left, @right")]
 
-    sizesx = column1.text_input("X - axis label:", "Volume", key="sizesx")
-    sizesy = column1.text_input("Y - axis label:", "Counts", key="sizesy")
+    def_x = streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['sizesx']
+    sizesx = column1.text_input("X - axis label:", value=def_x, key="sizesx")
+    streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['sizesx'] = sizesx
+    def_y = streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['sizesy']
+    sizesy = column1.text_input("Y - axis label:", def_y, key="sizesy")
+    streamlit.session_state['analysis_settings']['body']['droplet_sizes_distribution']['sizesy'] = sizesy
     # line = column2.selectbox("If you want to remove the line, toggle this to 'OFF'.",["Line", "OFF"])
     sizes_plot = []
     sizes_plot = figure(width=600,
@@ -298,16 +323,20 @@ def render_signal_plot(data_frame, threshold):
     mean = round(float(mean))
     min_signal = 0  # min(volumes)
     max_signal = maxi
+    def_bin = streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['bin_nr']
+    default_bin = column1.number_input("How many bins do you want to have?", value=def_bin)
+    streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['bin_nr'] = default_bin
 
-    default_bin = column1.number_input("How many bins do you want to have?", 3)
-    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['bin_nr'] = default_bin
-    initial_value = ", ".join(
-        [str(round(bin_value, 5)) for bin_value in numpy.linspace(min_signal, max_signal, default_bin + 1)])
-
+    if streamlit.session_state['analysis_settings']['name'] == "Default":
+        initial_value = ", ".join(
+            [str(round(bin_value, 5)) for bin_value in numpy.linspace(min_signal, max_signal, default_bin + 1)])
+    else:
+        initial_value = streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['bins']
     bins_input_field_value: str = column2.text_input(
         "If you want define your bins with your range, insert the boundary values here:",
         initial_value
     )
+    streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['bins'] = initial_value
     column2.warning(
         "**IMPORTANT NOTE**: Bins can be used in any range. We have an example here that goes from 0 up to any number of"
         "bins, e.g. 0, 0.25, 0.5, 1, 2, 4. If you are not sure, use the other binning method."
@@ -317,7 +346,7 @@ def render_signal_plot(data_frame, threshold):
                  "To toggle between 'log' and 'linear' form of the plot, click the tab below.")
 
     bins: list[float] = [float(input_value) for input_value in bins_input_field_value.split(",")]
-    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['bins'] = bins
+    # streamlit.session_state['analysis_settings']['droplet_signals_distribution']['bins'] = bins
     labels: list[str] = [str(round(binValue, 3)) for binValue in bins][1:]
     #
     # slide = column2.slider('You can also adjust your bins by sliding this button:',
@@ -339,14 +368,19 @@ def render_signal_plot(data_frame, threshold):
                 ("Bin", "@left, @right")]
 
     signals_plot = []
-    signalx = column1.text_input("X - axis label:", "Average Pixel Intensity", key="signalx")
-    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['signalx'] = signalx
-    signaly = column1.text_input("Y - axis label:", "Counts", key="signaly")
-    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['signaly'] = signaly
-    line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", ["Line", "OFF"],
+    def_x = streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['signalx']
+    signalx = column1.text_input("X - axis label:", value=def_x, key="signalx")
+    streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['signalx'] = signalx
+    def_y = streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['signaly']
+    signaly = column1.text_input("Y - axis label:", def_y, key="signaly")
+    streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['signaly'] = signaly
+
+    options = ["Line", "OFF"]
+    def_line = streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['line']
+    line = column1.selectbox("If you want to remove the line, toggle this to 'OFF'.", options, index=def_line,
                              key="line_signal")
-    streamlit.session_state['analysis_settings']['droplet_signals_distribution']['line'] = line
-    streamlit.write(streamlit.session_state['analysis_settings'])
+    streamlit.session_state['analysis_settings']['body']['droplet_signals_distribution']['line'] = options.index(line)
+
     for axis_type in ["log", "linear"]:
 
         fig_signal = figure(width=600,

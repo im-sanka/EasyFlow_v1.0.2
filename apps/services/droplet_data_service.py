@@ -4,8 +4,7 @@ import os.path
 import datetime
 import pandas
 from pandas import DataFrame
-import mysql.connector
-from apps.services.database_service import execute_query, execute_query_to_get_data
+from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id
 
 def store_droplet_data():
     with st.form("Upload your droplet data", clear_on_submit=True):
@@ -96,14 +95,6 @@ def data_frame_by_file_selection() -> Union[dict[Any, DataFrame], DataFrame, Non
     except ValueError:
         return pandas.read_csv(options_dict[option]['path'])
 
-
-def get_user_id(username):
-    user_id_query = "SELECT user_id FROM User WHERE username=%s"
-    val1 = [username]
-    result = execute_query_to_get_data(user_id_query, val1)
-    print(result)
-    user_id = result[0][0]
-    return user_id
 
 def get_all_data_options():
     # option format - "filename, by username, datetime"
