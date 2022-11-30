@@ -12,13 +12,16 @@ from apps.render_basic_plots import render_label_based_plot, render_size_signal_
 # from apps.render_polydisperse_analysis import render_size_distribution_in_polydisperse_module
 from apps.render_threshold import render_threshold
 from apps.services.droplet_data_service import data_frame_by_rendering_file_selection
-from apps.services.analysis_settings_service import set_default_settings, save_settings, create_save_form
-from apps.services.analysis_settings_service import save_settings
+from apps.services.analysis_settings_service import create_save_form, pick_settings, set_default_settings, rollback
 
 
 def page():
-    if 'analysis_settings' not in streamlit.session_state:
-        streamlit.session_state['analysis_settings'] = {}
+    if 'rollback_disabled' not in streamlit.session_state:
+        streamlit.session_state.rollback_disabled = True
+    # needed to update bins of the graphs, if true then bins will be allocated based on bin nr change
+    if 'bins_upd'not in streamlit.session_state:
+        streamlit.session_state['bins_upd'] = {'size_bins': False, 'signals_bins': False}
+
     streamlit.header("EasyFlow processes results from image analysis software")
     explanation = '<p style="font-size:20px">Current version is able to generate instant results with necessary graphs and tables.' \
                   '<br>EasyFlow only requires output data from image analysis software that includes signal, size and label/group data.</p>'
@@ -29,15 +32,22 @@ def page():
     #     "comparison between sizes and signals with threshold classification and condition/label-based data.")
     # streamlit.write("* If you wish to contribute or put your Python script as one of the modules here, let me know at immanuel.sanka[at]taltech[dot]ee")
     # Initialize page and get uploaded file data
-    upload_data, settings = streamlit.columns(2)
+    upload_data, choose_settings, store_settings = streamlit.columns(3)
     with upload_data:
         data_frame: Union[dict[Any, DataFrame], DataFrame, None] = data_frame_by_rendering_file_selection()
-    with settings:
+    if data_frame is None:
+        return
+    with choose_settings:
+        if 'analysis_settings' not in streamlit.session_state:
+            streamlit.session_state['analysis_settings'] = set_default_settings(data_frame)
+        settings_dict = pick_settings(data_frame)
+        rollback(settings_dict)
+    with store_settings:
         with streamlit.expander(label="Save Settings"):
             create_save_form()
 
-    if data_frame is None:
-        return
+
+
     #streamlit.write(data_frame.head())
     # Display table with the uploaded data
     # Calculating the average, radian, and volume which will be used in the calculation
@@ -46,9 +56,8 @@ def page():
     if data_frame is not TypeError or ValueError or KeyError:
     # Graphs starting here
         try:
+            print("after loading:  " + str(streamlit.session_state['analysis_settings']))
             # set default settings for analysis, data frame used to set default threshold
-            set_default_settings(data_frame)
-
             #streamlit.header("Data Visualization")
             #These render the basic modules
             streamlit.subheader("Droplet Sizes Distribution")
@@ -65,7 +74,6 @@ def page():
             render_signal_plot(data_frame, threshold)
             render_size_signal_plot(data_frame, threshold)
             render_label_based_plot(data_frame, threshold)
-            streamlit.write(streamlit.session_state['analysis_settings'])
 
         except Exception as e:
             # NB! Warning is not sufficient as error may occur because of old libraries
