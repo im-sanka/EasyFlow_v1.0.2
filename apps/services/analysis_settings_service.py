@@ -43,7 +43,7 @@ def save_settings(name, description, public):
     save_query = "INSERT INTO Analysis_settings(uploader, name,body, public, description) VALUES (%s,%s,%s,%s,%s)"
     vals = (user_id, name, body, public, description)
     execute_query(save_query, vals)
-    st.experimental_rerun()
+
 
 
 def create_save_form():
@@ -53,10 +53,14 @@ def create_save_form():
         public = st.checkbox("Do you want these settings to be available to others?", value=False)
         if st.form_submit_button("Save"):
             save_settings(name, description, public)
+            st.experimental_rerun()
 
 
 def pick_settings(data_frame):
-    options, settings_dict = get_all_settings(data_frame)
+    options = ['Default']
+    settings_dict = {'Default': set_default_settings(data_frame)}
+
+    options, settings_dict = get_all_settings(options, settings_dict)
     option = st.selectbox("Pick your settings", key='settings_sbox', options=options, on_change=change_settings,
                           args=[settings_dict])
     #if st.session_state['current_settings'] == "":
@@ -69,35 +73,47 @@ def pick_settings(data_frame):
 def change_settings(settings_dict):
     st.session_state['analysis_settings'] = settings_dict[st.session_state.settings_sbox]
 
-def get_all_settings(data_frame):
-    options = ['Default']
-    settings_dict = {'Default': set_default_settings(data_frame)}
+def get_all_settings(options, settings_dict):
     user_id = get_user_id(st.session_state['username'])
-    query = "SELECT name, body, description " \
-            "FROM Analysis_settings WHERE public=TRUE OR uploader=%s"
+    query = "SELECT name, body, description, username " \
+            "FROM Analysis_settings, User WHERE uploader=User.user_id AND (public=TRUE OR uploader=%s)"
     val = [user_id]
     results = execute_query_to_get_data(query, val)
     for row in results:
-        name = row[0] + " by " + st.session_state['username']
+        name = row[0] + " by " + row[3]
         body = json.loads(row[1])
         description = row[2]
         options.append(name)
         settings_dict[name] = {'name': row[0],
+                               'username': row[3],
                                'description': description,
                                'body': body
                                }
-
     return options, settings_dict
-
 
 def rollback(settings_dict):
     if st.session_state['analysis_settings'] != settings_dict[st.session_state.settings_sbox]:
         if st.button("Rollback settings", key='settings_rollback'):
-            print("before: " + str(st.session_state['analysis_settings']))
             st.session_state['analysis_settings'] = settings_dict[st.session_state.settings_sbox]
-            print("saved:  " + str(settings_dict[st.session_state.settings_sbox]))
-            print("after:  " + str(st.session_state['analysis_settings']))
-            print()
-            print()
             st.session_state.rollback_disabled = True
             st.experimental_rerun()
+
+def rename_settings(old_name, new_name):
+    user_id = get_user_id(st.session_state['username'])
+    query = "UPDATE Analysis_settings SET name=%s WHERE name=%s AND uploader=%s;"
+    vals = (new_name, old_name, user_id)
+    execute_query(query, vals)
+
+def change_description(name, new_desc):
+    user_id = get_user_id(st.session_state['username'])
+    query = "UPDATE Analysis_settings SET description=%s WHERE name=%s AND uploader=%s;"
+    vals = (new_desc, name, user_id)
+    execute_query(query, vals)
+
+def delete_settings(name):
+    user_id = get_user_id(st.session_state['username'])
+    query = "DELETE FROM Analysis_settings WHERE name=%s AND uploader=%s;"
+    vals = (name, user_id)
+    execute_query(query, vals)
+
+
