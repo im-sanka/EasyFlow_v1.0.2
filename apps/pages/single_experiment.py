@@ -26,7 +26,7 @@ def page():
     explanation = '<p style="font-size:20px">Current version is able to generate instant results with necessary graphs and tables.' \
                   '<br>EasyFlow only requires output data from image analysis software that includes signal, size and label/group data.</p>'
     streamlit.markdown(explanation, unsafe_allow_html=True)
-    streamlit.write("This version does not keep any data from user(s) and the results can be downloaded as figures and tables.")
+    streamlit.warning("This version does not keep any data from user(s) and the results can be downloaded as figures and tables.")
     # streamlit.write(
     #     "- **Basic Module**: This module generates plots for sizes, signals, "
     #     "comparison between sizes and signals with threshold classification and condition/label-based data.")
@@ -41,6 +41,7 @@ def page():
         if 'analysis_settings' not in streamlit.session_state:
             streamlit.session_state['analysis_settings'] = set_default_settings(data_frame)
         settings_dict = pick_settings(data_frame)
+        streamlit.info(streamlit.session_state['analysis_settings']['description'])
         rollback(settings_dict)
     with store_settings:
         with streamlit.expander(label="Save Settings"):
