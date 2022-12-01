@@ -37,22 +37,36 @@ def set_default_settings(data_frame):
         }
     }
 
-def save_settings(name, description, public):
+def save_settings(name, description, public, update):
+    print('update ' + str(update))
     user_id = get_user_id(st.session_state['username'])
     body = json.dumps(st.session_state['analysis_settings']['body'])
-    save_query = "INSERT INTO Analysis_settings(uploader, name,body, public, description) VALUES (%s,%s,%s,%s,%s)"
-    vals = (user_id, name, body, public, description)
-    execute_query(save_query, vals)
-
+    if update:
+        query = "UPDATE Analysis_settings SET description=%s, body=%s WHERE name=%s AND uploader=%s;"
+        vals = (description, body, name, user_id)
+    else:
+        query = "INSERT INTO Analysis_settings(uploader, name,body, public, description) VALUES (%s,%s,%s,%s,%s)"
+        vals = (user_id, name, body, public, description)
+    execute_query(query, vals)
 
 
 def create_save_form():
+    def_desc = ""
+    def_name = ""
+    if st.session_state['analysis_settings']['name'] != 'Default' and \
+            st.session_state['analysis_settings']['username'] == st.session_state['username']:
+        def_desc = st.session_state['analysis_settings']['description']
+        def_name = st.session_state['analysis_settings']['name']
     with st.form(key="save_settings"):
-        description = st.text_area("Description", key="setting_desc")
-        name = st.text_input("Name for your settings", key="settings_name")
+        description = st.text_area("Description", value=def_desc, key="setting_desc")
+        name = st.text_input("Name for your settings",value=def_name, key="settings_name")
         public = st.checkbox("Do you want these settings to be available to others?", value=False)
-        if st.form_submit_button("Save"):
-            save_settings(name, description, public)
+        save_update = st.form_submit_button("Save/Update")
+        if save_update:
+            if def_desc != "":
+                save_settings(name, description, public, True)
+            else:
+                save_settings(name, description, public, False)
             st.experimental_rerun()
 
 

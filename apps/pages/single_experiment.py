@@ -44,7 +44,10 @@ def page():
         streamlit.info(streamlit.session_state['analysis_settings']['description'])
         rollback(settings_dict)
     with store_settings:
-        with streamlit.expander(label="Save Settings"):
+        streamlit.info("To update your settings you first need to select them in setting selection menu. Afterwards, "
+                       "you must leave default the value name field. You can change description and parameters "
+                       "by changing input fields accordingly and clicking on Save/Update button.")
+        with streamlit.expander(label="Save/Update Settings"):
             create_save_form()
 
 
