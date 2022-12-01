@@ -4,6 +4,7 @@ from apps.services.droplet_data_service import get_all_owned_droplet_data, delet
 from apps.services.analysis_settings_service import get_all_settings, rename_settings, change_description, \
     delete_settings
 
+
 def page():
     st.subheader("Saved droplet analysis data")
     owned_droplet_datasets = get_all_owned_droplet_data()
@@ -50,7 +51,7 @@ def page():
                 with renaming:
                     with st.form(f"settings_rename_{setting['name']}"):
                         old_name = st.text_input(label="Write in the old name", value=setting['name'],
-                                      key=f"old_name_{setting['name']}")
+                                                 key=f"old_name_{setting['name']}")
                         new_name = st.text_input(label="Input a new name", key=f"new_name_{setting['name']}")
                         submit = st.form_submit_button("Rename!")
                         if submit:
@@ -80,4 +81,3 @@ def page():
                             st.experimental_rerun()
                         else:
                             st.warning("You must confirm if you want these settings to be deleted!")
-
