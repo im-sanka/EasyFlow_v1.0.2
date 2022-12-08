@@ -40,15 +40,14 @@ def page():
     with choose_settings:
         if 'analysis_settings' not in streamlit.session_state:
             streamlit.session_state['analysis_settings'] = set_default_settings(data_frame)
-        settings_dict = pick_settings(data_frame)
+        pick_settings(data_frame)
         streamlit.info(streamlit.session_state['analysis_settings']['description'])
-        rollback(settings_dict)
+        rollback()
     with store_settings:
         streamlit.info("To update your settings you first need to select them in setting selection menu. Afterwards, "
                        "you must leave default the value name field. You can change description and parameters "
                        "by changing input fields accordingly and clicking on Save/Update button.")
-        with streamlit.expander(label="Save/Update Settings"):
-            create_save_form()
+        create_save_form()
 
 
 
@@ -60,7 +59,6 @@ def page():
     if data_frame is not TypeError or ValueError or KeyError:
     # Graphs starting here
         try:
-            print("after loading:  " + str(streamlit.session_state['analysis_settings']))
             # set default settings for analysis, data frame used to set default threshold
             #streamlit.header("Data Visualization")
             #These render the basic modules

@@ -188,7 +188,7 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
         st.session_state['bins_upd']['size_bins'] = False
     else:
         initial_value = st.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bins']
-        print(initial_value)
+
 
     bins_input_field_value: str = column2.text_input(
         "If you want define your bins with your range, insert the boundary values here:",
@@ -196,7 +196,6 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
         key='size_bins',
         on_change=upd_size_bins
     )
-    print(bins_input_field_value)
     column2.warning(
         "**IMPORTANT NOTE**: Bins can be used in any range. We have an example here that goes from 0 up to 4 nL in 14 "
         "bins, e.g. 0, 0.001953125, 0.00390625,  0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4 "
