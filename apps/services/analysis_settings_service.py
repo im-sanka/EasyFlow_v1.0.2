@@ -53,17 +53,19 @@ def save_settings(name, description, public, update):
 def create_save_form():
     def_desc = ""
     def_name = ""
-    if st.session_state['analysis_settings']['name'] != 'Default' and \
-            st.session_state['analysis_settings']['username'] == st.session_state['username']:
-        def_desc = st.session_state['analysis_settings']['description']
-        def_name = st.session_state['analysis_settings']['name']
+    if st.session_state['analysis_settings']['name'] != 'Default':
+        if st.session_state['analysis_settings']['username'] == st.session_state['username']:
+            def_desc = st.session_state['analysis_settings']['description']
+            def_name = st.session_state['analysis_settings']['name']
+        else:
+            st.warning("Users can update only those settings made by themselves.")
     with st.form(key="save_settings"):
         description = st.text_area("Description", value=def_desc, key="setting_desc")
-        name = st.text_input("Name for your settings",value=def_name, key="settings_name")
+        name = st.text_input("Name for your settings", value=def_name, key="settings_name")
         public = st.checkbox("Do you want these settings to be available to others?", value=False)
         save_update = st.form_submit_button("Save/Update")
         if save_update:
-            if def_desc != "":
+            if name == def_name:
                 save_settings(name, description, public, True)
             else:
                 save_settings(name, description, public, False)
