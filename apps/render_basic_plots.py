@@ -179,7 +179,7 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
 
     column1, column2 = st.columns(2)
     def_bin = st.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bin_nr']
-    default_bin = column1.number_input("How many bins do you want to have?", def_bin,
+    default_bin = column1.number_input("How many bins do you want to have?", min_value=5, value=def_bin,
                                        on_change=upd_size_bin_nr, key='size_bin_nr')
     # slider = column1.slider("Check slider", 0, max_volume, default_bin)
     if st.session_state['bins_upd']['size_bins']:
@@ -188,7 +188,7 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
         st.session_state['bins_upd']['size_bins'] = False
     else:
         initial_value = st.session_state['analysis_settings']['body']['droplet_sizes_distribution']['bins']
-        print(initial_value)
+
 
     bins_input_field_value: str = column2.text_input(
         "If you want define your bins with your range, insert the boundary values here:",
@@ -196,7 +196,6 @@ def _bin_sizes_input_data_from_user(volumes: list[float]) -> [list[float], list[
         key='size_bins',
         on_change=upd_size_bins
     )
-    print(bins_input_field_value)
     column2.warning(
         "**IMPORTANT NOTE**: Bins can be used in any range. We have an example here that goes from 0 up to 4 nL in 14 "
         "bins, e.g. 0, 0.001953125, 0.00390625,  0.0078125, 0.015625, 0.03125, 0.0625, 0.125, 0.25, 0.5, 1, 2, 4 "
@@ -325,7 +324,7 @@ def render_signal_plot(data_frame, threshold):
     max_signal = maxi
     def_bin = st.session_state['analysis_settings']['body']['droplet_signals_distribution']['bin_nr']
     default_bin = column1.number_input("How many bins do you want to have?", value=def_bin, key='signal_bin_nr',
-                                       on_change=upd_signal_bin_nr)
+                                       on_change=upd_signal_bin_nr, min_value=3)
     if st.session_state['bins_upd']['signals_bins']:
         initial_value = \
             ", ".join([str(round(bin_value, 5)) for bin_value in numpy.linspace(min_signal, max_signal, default_bin + 1)])

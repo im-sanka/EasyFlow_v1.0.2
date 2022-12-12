@@ -37,41 +37,78 @@ def set_default_settings(data_frame):
         }
     }
 
-def save_settings(name, description, public):
-    user_id = get_user_id(st.session_state['username'])
+def save_settings(name, description, public, user_id, update):
     body = json.dumps(st.session_state['analysis_settings']['body'])
-    save_query = "INSERT INTO Analysis_settings(uploader, name,body, public, description) VALUES (%s,%s,%s,%s,%s)"
-    vals = (user_id, name, body, public, description)
-    execute_query(save_query, vals)
+    if update:
+        query = "UPDATE Analysis_settings SET description=%s, body=%s WHERE name=%s AND uploader=%s;"
+        execute_query(query, (description, body, name, user_id))
+        st.session_state.rollback_disabled = True
+        st.session_state['updated_saved'] = True
+    else:
+        query = "INSERT INTO Analysis_settings(uploader, name,body, public, description) VALUES (%s,%s,%s,%s,%s)"
+        if name != "Default":
+            execute_query(query, (user_id, name, body, public, description))
+            st.session_state['current_setting'] = "Default"
+            st.session_state['updated_saved'] = True
+        else:
+            st.error("Invalid name chosen! Name 'Default' is not allowed.")
 
-
+def upd_name_lst(user_id):
+    if 'setting_names' not in st.session_state:
+        st.session_state['setting_names'] = []
+    name_query = "Select name from Analysis_settings WHERE uploader=%s;"
+    setting_names = []
+    result = execute_query_to_get_data(name_query, [user_id])
+    for row in result:
+        setting_names.append(row[0])
+    st.session_state['setting_names'] = setting_names
 
 def create_save_form():
-    with st.form(key="save_settings"):
-        description = st.text_area("Description", key="setting_desc")
-        name = st.text_input("Name for your settings", key="settings_name")
+
+    def_desc = ""
+    def_name = ""
+    if st.session_state['analysis_settings']['name'] != 'Default':
+        if st.session_state['analysis_settings']['username'] == st.session_state['username']:
+            def_desc = st.session_state['analysis_settings']['description']
+            def_name = st.session_state['analysis_settings']['name']
+        else:
+            st.warning("Users can update only those settings made by themselves.")
+    with st.form(key="update_save_setting", clear_on_submit=True):
+        description = st.text_area("Description", value=def_desc, key="setting_desc")
+        user_id = get_user_id(st.session_state['username'])
+        upd_name_lst(user_id)
+        name = st.text_input("Name for your settings", value=def_name, key="settings_name")
         public = st.checkbox("Do you want these settings to be available to others?", value=False)
-        if st.form_submit_button("Save"):
-            save_settings(name, description, public)
+        submit = st.form_submit_button(label="Submit")
+        st.warning("Inserting an existing name will update owned setting with the same name.")
+        if submit:
+            if name in st.session_state['setting_names']:
+                save_settings(name, description, public, user_id, True)
+            else:
+                save_settings(name, description, public, user_id, False)
             st.experimental_rerun()
 
-
 def pick_settings(data_frame):
+    if 'updated_saved' not in st.session_state:
+        st.session_state['updated_saved'] = False
+    if 'current_setting' not in st.session_state:
+        st.session_state['current_setting'] = "Default"
+    if 'all_settings' not in st.session_state:
+        st.session_state['all_settings'] = {}
     options = ['Default']
     settings_dict = {'Default': set_default_settings(data_frame)}
+    options = get_all_settings(options, settings_dict)
+    option = st.selectbox("Pick your settings", key='settings_sbox',index=0, options=options, on_change=change_settings)
 
-    options, settings_dict = get_all_settings(options, settings_dict)
-    option = st.selectbox("Pick your settings", key='settings_sbox', options=options, on_change=change_settings,
-                          args=[settings_dict])
-    #if st.session_state['current_settings'] == "":
-    #    if option == 'Default':
-    #        st.session_state['analysis_settings'] = set_default_settings(data_frame)
-    #    else:
-    #        st.session_state['analysis_settings'] = settings_dict[option]
-    #        st.session_state['current_settings'] = option
+    if st.session_state['updated_saved']:
+        st.session_state['analysis_settings'] = st.session_state['all_settings'][st.session_state.settings_sbox]
+        st.session_state['updated_saved'] = False
+        st.session_state.rollback_disabled = True
     return settings_dict
-def change_settings(settings_dict):
-    st.session_state['analysis_settings'] = settings_dict[st.session_state.settings_sbox]
+def change_settings():
+    st.session_state['analysis_settings'] = st.session_state['all_settings'][st.session_state.settings_sbox]
+    st.session_state['current_setting'] = st.session_state.settings_sbox
+
 
 def get_all_settings(options, settings_dict):
     user_id = get_user_id(st.session_state['username'])
@@ -89,12 +126,13 @@ def get_all_settings(options, settings_dict):
                                'description': description,
                                'body': body
                                }
-    return options, settings_dict
+    st.session_state['all_settings'] = settings_dict
+    return options
 
-def rollback(settings_dict):
-    if st.session_state['analysis_settings'] != settings_dict[st.session_state.settings_sbox]:
+def rollback():
+    if st.session_state['analysis_settings'] != st.session_state['all_settings'][st.session_state['current_setting']]:
         if st.button("Rollback settings", key='settings_rollback'):
-            st.session_state['analysis_settings'] = settings_dict[st.session_state.settings_sbox]
+            st.session_state['analysis_settings'] = st.session_state['all_settings'][st.session_state.settings_sbox]
             st.session_state.rollback_disabled = True
             st.experimental_rerun()
 
