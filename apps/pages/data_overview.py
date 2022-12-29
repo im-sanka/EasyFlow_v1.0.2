@@ -1,16 +1,16 @@
 import streamlit as st
 from apps.services.droplet_data_service import get_all_owned_droplet_data, delete_owned_droplet_dataset, \
     rename_droplet_data
-from apps.services.analysis_settings_service import get_all_settings, rename_settings, change_description, \
+from apps.services.analysis_settings_service import get_all_available_settings, rename_settings, change_description, \
     delete_settings
 from apps.services.sharing_service import get_possible_data_receivers, get_receivers, add_remove_receiver
 
 
 def page():
     st.subheader("Saved droplet analysis data")
-    if len(st.session_state['username']) > 0:
+    if st.session_state['username'] is not None:
         display_owned_data()
-        diplay_settings()
+        display_settings()
 
 
 def display_owned_data():
@@ -60,9 +60,9 @@ def display_owned_data():
                     else:
                         add_remove_receiver(data_id, options)
 
-def diplay_settings():
+def display_settings():
     st.subheader("Saved droplet analysis settings")
-    options = get_all_settings([], {})
+    options = get_all_available_settings([], {}, True)
     for option in options:
         setting = st.session_state['all_settings'][option]
         if setting['username'] == st.session_state['username']:
