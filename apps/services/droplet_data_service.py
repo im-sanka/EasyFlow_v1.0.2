@@ -6,10 +6,11 @@ import pandas
 from pandas import DataFrame
 from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id
 
+
 def store_droplet_data():
     with st.form("Upload your droplet data", clear_on_submit=True):
-        data_description = st.text_area('Description of your droplet data.',)
-        is_public = st.checkbox("Let others use this dataset?",  value=True)
+        data_description = st.text_area('Description of your droplet data.', )
+        is_public = st.checkbox("Let others use this dataset?", value=True)
         uploaded_file = st.file_uploader(
             "You can upload .CSV or .XLSX files.",
             type=["xlsx", "csv"]
@@ -26,7 +27,8 @@ def store_droplet_data():
                 else:
                     data_type = "xlsx"
                 full_path, filename = store_data_on_machine(uploaded_file, username, date_time, filename, data_type)
-                store_data_in_database(full_path, username, date_time, data_description, is_public, file_size, filename, data_type)
+                store_data_in_database(full_path, username, date_time, data_description, is_public, file_size, filename,
+                                       data_type)
             else:
                 st.warning("Upload the correct file!")
 
@@ -35,21 +37,24 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
     save_path = "/home/daniel/easyflow/storage/droplet_data/"
     # save_path = "/home/ubuntu/storage/droplet_data/"
     if data_type == "csv":
-        filename = filename[:len(filename)-4]
+        filename = filename[:len(filename) - 4]
     else:
-        filename = filename[:len(filename)-5]
+        filename = filename[:len(filename) - 5]
     fullname = filename + "_" + username + "_" + str(date_time) + "." + data_type
     full_path = save_path + fullname
     with open(os.path.join(save_path, fullname), "wb") as f:
         f.write(file.getbuffer())
         f.close()
     return full_path, filename
+
+
 def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename, data_type):
     user_id = get_user_id(username)
     insert_query = "INSERT INTO Analysis_data (uploader, upload_datetime, public, file_size_bytes,file_path, " \
                    "analysis_data_description, analysis_data_name, data_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
     vals = [user_id, date_time, is_public, file_size, full_path, description, filename, data_type]
     execute_query(insert_query, vals)
+
 
 def data_frame_by_rendering_file_selection():
     upload = st.checkbox("Upload file from system")
@@ -61,8 +66,8 @@ def data_frame_by_rendering_file_selection():
 
     return data_frame
 
-def data_frame_by_upload() -> Union[dict[Any, DataFrame], DataFrame, None]:
 
+def data_frame_by_upload() -> Union[dict[Any, DataFrame], DataFrame, None]:
     uploaded_file = st.file_uploader(
         "You can use the .CSV or .XLSX filetype in this platform.",
         type=["xlsx", "csv"]
@@ -78,6 +83,7 @@ def data_frame_by_upload() -> Union[dict[Any, DataFrame], DataFrame, None]:
         st.warning("Upload the correct file!")
     return data_frame
 
+
 def data_frame_by_file_selection() -> Union[dict[Any, DataFrame], DataFrame, None]:
     data_frame = None
     options, options_dict = get_all_data_options()
@@ -88,7 +94,7 @@ def data_frame_by_file_selection() -> Union[dict[Any, DataFrame], DataFrame, Non
     filename = options_dict[option]['filename']
     username = options_dict[option]['username']
     time = options_dict[option]['time']
-    complete_filename = filename+"_"+username+"_"+time
+    complete_filename = filename + "_" + username + "_" + time
 
     try:
         return pandas.read_excel(options_dict[option]['path'])
@@ -101,31 +107,38 @@ def get_all_data_options():
     # option format - "_dummy_data.csv, by dabere, 2022-11-04 00:57:55"
     options_dict = {}
     options = ["Select data set you want"]
-    user_id = [get_user_id(st.session_state['username'])]
-    query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data, User " \
-            "WHERE uploader=user_id AND active=TRUE AND (user_id=%s OR public); "
-    rows = execute_query_to_get_data(query, user_id)
-    for row in rows:
-        option = row[0] + ", by " + row[1] + " " + str(row[2])
-        options_dict[option] = {'username': row[1], 'filename': row[0], 'time': str(row[2]), 'path': row[3]}
-        options.append(option)
+    if st.session_state['authentication_status']:
+        user_id = get_user_id(st.session_state['username'])
+        query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
+                "JOIN User ON (uploader=user_id) " \
+                "WHERE active AND (uploader=%s OR public " \
+                "OR analysis_data_id IN " \
+                "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL))"
+        rows = execute_query_to_get_data(query, (user_id, user_id))
+        for row in rows:
+            option = row[0] + ", by " + row[1] + " " + str(row[2])
+            options_dict[option] = {'username': row[1], 'filename': row[0], 'time': str(row[2]), 'path': row[3]}
+            options.append(option)
     return options, options_dict
+
 
 def get_all_owned_droplet_data():
     droplet_data_dict = {}
     query = "SELECT " \
             "analysis_data_id, upload_datetime, file_path, analysis_data_description, analysis_data_name, data_type " \
-            "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s OR public);"
+            "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s);"
     rows = execute_query_to_get_data(query, [st.session_state['username']])
     for row in rows:
         droplet_data_dict[row[0]] = \
             {'upload time': row[1], 'filepath': row[2], 'description': row[3], 'filename': row[4], 'data_type': row[5]}
     return droplet_data_dict
 
+
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
     query = "UPDATE Analysis_data SET active=FALSE WHERE analysis_data_id=%s;"
     execute_query(query, [droplet_analysis_id])
     os.remove(filepath)
+
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     path = "/home/daniel/easyflow/storage/droplet_data/"
@@ -136,4 +149,3 @@ def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
             f"WHERE analysis_data_id={data_id}"
     execute_query(query)
-

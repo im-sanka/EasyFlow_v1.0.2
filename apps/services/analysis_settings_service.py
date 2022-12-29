@@ -97,8 +97,8 @@ def pick_settings(data_frame):
         st.session_state['all_settings'] = {}
     options = ['Default']
     settings_dict = {'Default': set_default_settings(data_frame)}
-    options = get_all_settings(options, settings_dict)
-    option = st.selectbox("Pick your settings", key='settings_sbox',index=0, options=options, on_change=change_settings)
+    options = get_all_available_settings(options, settings_dict, False)
+    option = st.selectbox("Pick your settings", key='settings_sbox', index=0, options=options, on_change=change_settings)
 
     if st.session_state['updated_saved']:
         st.session_state['analysis_settings'] = st.session_state['all_settings'][st.session_state.settings_sbox]
@@ -110,10 +110,14 @@ def change_settings():
     st.session_state['current_setting'] = st.session_state.settings_sbox
 
 
-def get_all_settings(options, settings_dict):
+def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
     user_id = get_user_id(st.session_state['username'])
-    query = "SELECT name, body, description, username " \
-            "FROM Analysis_settings, User WHERE uploader=User.user_id AND (public=TRUE OR uploader=%s)"
+    if owned:
+        query = "SELECT name, body, description, username " \
+                "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s"
+    else:
+        query = "SELECT name, body, description, username " \
+                "FROM Analysis_settings, User WHERE uploader=User.user_id AND (public=TRUE OR uploader=%s)"
     val = [user_id]
     results = execute_query_to_get_data(query, val)
     for row in results:
