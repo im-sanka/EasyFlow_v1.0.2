@@ -1,6 +1,6 @@
 import streamlit as st
 from PIL import Image
-from apps.pages import store_data, psw_reset, registration, instruction, home, single_experiment, data_overview
+from apps.pages import data_overview, instruction, registration, store_data, psw_reset, single_experiment
 import apps.services.authentication_service as auth_service
 from multipage_backbone import MultiPages
 
@@ -16,12 +16,12 @@ image = Image.open('files/banner_new3.png')
 # page.add_page("Home", home.page)
 auth_service.enable_login()
 
-
 if st.session_state['authentication_status'] is None:
     page.add_page("Registration", registration.page)
 elif st.session_state['authentication_status']:
     page.add_page("Analysis and Visualization", single_experiment.page)
     page.add_page("Data overview", data_overview.page)
+
     auth_service.enable_logout()
     st.write(f"Welcome {st.session_state['name']}")
     # Add all your applications (pages) here
@@ -34,6 +34,7 @@ elif st.session_state['authentication_status']:
     page.add_page("Password reset", psw_reset.page)
     # The main app
 elif not st.session_state["authentication_status"]:
+    page.add_page("Registration", registration.page)
     st.sidebar.error("Wrong username or password")
 
 page.run()
