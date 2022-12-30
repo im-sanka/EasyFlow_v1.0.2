@@ -37,6 +37,7 @@ def set_default_settings(data_frame):
         }
     }
 
+
 def save_settings(name, description, public, user_id, update):
     body = json.dumps(st.session_state['analysis_settings']['body'])
     if update:
@@ -53,6 +54,7 @@ def save_settings(name, description, public, user_id, update):
         else:
             st.error("Invalid name chosen! Name 'Default' is not allowed.")
 
+
 def upd_name_lst(user_id):
     if 'setting_names' not in st.session_state:
         st.session_state['setting_names'] = []
@@ -63,8 +65,8 @@ def upd_name_lst(user_id):
         setting_names.append(row[0])
     st.session_state['setting_names'] = setting_names
 
-def create_save_form():
 
+def create_save_form():
     def_desc = ""
     def_name = ""
     if st.session_state['analysis_settings']['name'] != 'Default':
@@ -88,6 +90,7 @@ def create_save_form():
                 save_settings(name, description, public, user_id, False)
             st.experimental_rerun()
 
+
 def pick_settings(data_frame):
     if 'updated_saved' not in st.session_state:
         st.session_state['updated_saved'] = False
@@ -98,13 +101,16 @@ def pick_settings(data_frame):
     options = ['Default']
     settings_dict = {'Default': set_default_settings(data_frame)}
     options = get_all_available_settings(options, settings_dict, False)
-    option = st.selectbox("Pick your settings", key='settings_sbox', index=0, options=options, on_change=change_settings)
+    st.selectbox("Pick your settings", key='settings_sbox', index=0, options=options,
+                 on_change=change_settings)
 
     if st.session_state['updated_saved']:
         st.session_state['analysis_settings'] = st.session_state['all_settings'][st.session_state.settings_sbox]
         st.session_state['updated_saved'] = False
         st.session_state.rollback_disabled = True
     return settings_dict
+
+
 def change_settings():
     st.session_state['analysis_settings'] = st.session_state['all_settings'][st.session_state.settings_sbox]
     st.session_state['current_setting'] = st.session_state.settings_sbox
@@ -138,6 +144,7 @@ def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
     st.session_state['all_settings'] = settings_dict
     return options
 
+
 def rollback():
     if st.session_state['analysis_settings'] != st.session_state['all_settings'][st.session_state['current_setting']]:
         if st.button("Rollback settings", key='settings_rollback'):
@@ -145,11 +152,13 @@ def rollback():
             st.session_state.rollback_disabled = True
             st.experimental_rerun()
 
+
 def rename_settings(old_name, new_name):
     user_id = get_user_id(st.session_state['username'])
     query = "UPDATE Analysis_settings SET name=%s WHERE name=%s AND uploader=%s;"
     vals = (new_name, old_name, user_id)
     execute_query(query, vals)
+
 
 def change_description(name, new_desc):
     user_id = get_user_id(st.session_state['username'])
@@ -157,10 +166,9 @@ def change_description(name, new_desc):
     vals = (new_desc, name, user_id)
     execute_query(query, vals)
 
+
 def delete_settings(name):
     user_id = get_user_id(st.session_state['username'])
     query = "DELETE FROM Analysis_settings WHERE name=%s AND uploader=%s;"
     vals = (name, user_id)
     execute_query(query, vals)
-
-
