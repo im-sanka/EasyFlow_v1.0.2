@@ -113,20 +113,25 @@ def change_settings():
 def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
     user_id = get_user_id(st.session_state['username'])
     if owned:
-        query = "SELECT name, body, description, username " \
-                "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s"
+        query = "SELECT analysis_settings_id, name, body, description, username " \
+                "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s;"
+        val = [user_id]
     else:
-        query = "SELECT name, body, description, username " \
-                "FROM Analysis_settings, User WHERE uploader=User.user_id AND (public=TRUE OR uploader=%s)"
-    val = [user_id]
+        query = "SELECT A.analysis_settings_id, name, body, description, username " \
+                "FROM Analysis_settings as A " \
+                "JOIN User as U ON A.uploader=U.user_id " \
+                "WHERE uploader=%s OR public=TRUE OR A.analysis_settings_id IN " \
+                "(SELECT S.analysis_settings_id FROM Shared_settings as S WHERE user_id=%s AND end_date IS NULL);"
+        val = [user_id, user_id]
     results = execute_query_to_get_data(query, val)
     for row in results:
-        name = row[0] + " by " + row[3]
-        body = json.loads(row[1])
-        description = row[2]
+        name = row[1] + " by " + row[4]
+        body = json.loads(row[2])
+        description = row[3]
         options.append(name)
-        settings_dict[name] = {'name': row[0],
-                               'username': row[3],
+        settings_dict[name] = {'id': row[0],
+                               'name': row[1],
+                               'username': row[4],
                                'description': description,
                                'body': body
                                }

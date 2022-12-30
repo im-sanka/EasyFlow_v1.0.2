@@ -3,7 +3,8 @@ from apps.services.droplet_data_service import get_all_owned_droplet_data, delet
     rename_droplet_data
 from apps.services.analysis_settings_service import get_all_available_settings, rename_settings, change_description, \
     delete_settings
-from apps.services.sharing_service import get_possible_data_receivers, get_receivers, add_remove_receiver
+from apps.services.sharing_service import get_all_possible_receivers, get_data_receivers, add_remove_data_receiver, \
+    get_setting_receivers, add_remove_sett_receiver
 
 
 def page():
@@ -52,13 +53,14 @@ def display_owned_data():
             sharing, other = st.columns(2)
             with sharing:
                 options = st.multiselect(label="Share your data with others!",
-                                         options=get_possible_data_receivers(), default=get_receivers(data_id),
+                                         options=get_all_possible_receivers(), default=get_data_receivers(data_id),
                                          key=f"mlt_share_{str(data_id)}")
                 if st.button("Update list of receivers", key=f"update_receivers_{str(data_id)}"):
-                    if options == get_receivers(data_id):
+                    if options == get_data_receivers(data_id):
                         st.warning("No changes made!")
                     else:
-                        add_remove_receiver(data_id, options)
+                        add_remove_data_receiver(data_id, options)
+
 
 def display_settings():
     st.subheader("Saved droplet analysis settings")
@@ -102,3 +104,16 @@ def display_settings():
                             st.experimental_rerun()
                         else:
                             st.warning("You must confirm if you want these settings to be deleted!")
+                sharing, public = st.columns(2)
+                with sharing:
+                    options = st.multiselect(label="Share your analysis settings with others!",
+                                             options=get_all_possible_receivers(),
+                                             default=get_setting_receivers(setting['id']),
+                                             key=f"mlt_share_sett_{setting['name']}")
+                    if st.button("Update list of receivers", key=f"update_sett_receivers_{setting['id']}"):
+                        if options == get_setting_receivers(setting['id']):
+                            st.warning("No changes made!")
+                        else:
+                            add_remove_sett_receiver(setting['id'], options)
+                with public:
+                    print()
