@@ -8,9 +8,9 @@ def set_default_settings(data_frame):
         'name': "Default",
         'uploader': 'EasyFlow',
         'description': "Default settings for any plot",
+        'public': True,
         'body': {
             'threshold': data_frame['Intensity'].min() + 0.0001,
-
             'droplet_sizes_distribution': {
                 'bin_nr': 5,
                 'bins': "0.0,0.66173,1.32346,1.98519,2.64692,3.30865",
@@ -119,11 +119,11 @@ def change_settings():
 def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
     user_id = get_user_id(st.session_state['username'])
     if owned:
-        query = "SELECT analysis_settings_id, name, body, description, username " \
+        query = "SELECT analysis_settings_id, name, body, description, username, public " \
                 "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s;"
         val = [user_id]
     else:
-        query = "SELECT A.analysis_settings_id, name, body, description, username " \
+        query = "SELECT A.analysis_settings_id, name, body, description, username, public " \
                 "FROM Analysis_settings as A " \
                 "JOIN User as U ON A.uploader=U.user_id " \
                 "WHERE uploader=%s OR public=TRUE OR A.analysis_settings_id IN " \
@@ -139,6 +139,7 @@ def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
                                'name': row[1],
                                'username': row[4],
                                'description': description,
+                               'public': row[5],
                                'body': body
                                }
     st.session_state['all_settings'] = settings_dict
@@ -172,3 +173,13 @@ def delete_settings(name):
     query = "DELETE FROM Analysis_settings WHERE name=%s AND uploader=%s;"
     vals = (name, user_id)
     execute_query(query, vals)
+
+def change_sett_p_status(sett_id: int):
+    q_for_public_status = f"SELECT public FROM Analysis_settings WHERE analysis_settings_id={sett_id}"
+    old_p = execute_query_to_get_data(q_for_public_status)[0][0]
+    q_to_change_p = f"UPDATE Analysis_settings SET public=%s WHERE analysis_settings_id={sett_id}"
+    if old_p == 1:
+        val = [0]
+    else:
+        val = [1]
+    execute_query(q_to_change_p, val)
