@@ -10,7 +10,7 @@ from apps.services.database_service import execute_query, execute_query_to_get_d
 def store_droplet_data():
     with st.form("Upload your droplet data", clear_on_submit=True):
         data_description = st.text_area('Description of your droplet data.', )
-        is_public = st.checkbox("Let others use this dataset?", value=True)
+        is_public = st.checkbox("Let others use this droplet data?", value=False)
         uploaded_file = st.file_uploader(
             "You can upload .CSV or .XLSX files.",
             type=["xlsx", "csv"]
@@ -124,13 +124,14 @@ def get_all_data_options():
 
 def get_all_owned_droplet_data():
     droplet_data_dict = {}
-    query = "SELECT " \
-            "analysis_data_id, upload_datetime, file_path, analysis_data_description, analysis_data_name, data_type " \
+    query = "SELECT analysis_data_id, upload_datetime, file_path, analysis_data_description, " \
+            "analysis_data_name, data_type, public " \
             "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s);"
     rows = execute_query_to_get_data(query, [st.session_state['username']])
     for row in rows:
         droplet_data_dict[row[0]] = \
-            {'upload time': row[1], 'filepath': row[2], 'description': row[3], 'filename': row[4], 'data_type': row[5]}
+            {'upload time': row[1], 'filepath': row[2], 'description': row[3],
+             'filename': row[4], 'data_type': row[5], 'public': row[6]}
     return droplet_data_dict
 
 
@@ -149,3 +150,13 @@ def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
             f"WHERE analysis_data_id={data_id};"
     execute_query(query)
+
+def change_data_p_status(data_id: int):
+    q_for_public_status = f"SELECT public FROM Analysis_data WHERE analysis_data_id={data_id}"
+    old_p = execute_query_to_get_data(q_for_public_status)[0][0]
+    q_to_change_p = f"UPDATE Analysis_data SET public=%s WHERE analysis_data_id={data_id}"
+    if old_p == 1:
+        val = [0]
+    else:
+        val = [1]
+    execute_query(q_to_change_p, val)

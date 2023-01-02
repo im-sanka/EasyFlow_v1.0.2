@@ -1,8 +1,8 @@
 import streamlit as st
 from apps.services.droplet_data_service import get_all_owned_droplet_data, delete_owned_droplet_dataset, \
-    rename_droplet_data
+    rename_droplet_data, change_data_p_status
 from apps.services.analysis_settings_service import get_all_available_settings, rename_settings, change_description, \
-    delete_settings
+    delete_settings, change_sett_p_status
 from apps.services.sharing_service import get_all_possible_receivers, get_data_receivers, add_remove_data_receiver, \
     get_setting_receivers, add_remove_sett_receiver
 
@@ -22,6 +22,7 @@ def display_owned_data():
         filepath = owned_droplet_datasets[data_id]['filepath']
         upload_time = owned_droplet_datasets[data_id]['upload time']
         data_type = owned_droplet_datasets[data_id]['data_type']
+        public_status = owned_droplet_datasets[data_id]['public']
         label = f"{filename}, upload time: {upload_time}"
         with st.expander(label=label):
             desc, renaming, deletion = st.columns(3)
@@ -50,7 +51,7 @@ def display_owned_data():
                         st.experimental_rerun()
                     else:
                         st.warning("You must confirm if you want this droplet data to be deleted!")
-            sharing, other = st.columns(2)
+            sharing, public = st.columns(2)
             with sharing:
                 options = st.multiselect(label="Share your data with others!",
                                          options=get_all_possible_receivers(), default=get_data_receivers(data_id),
@@ -60,6 +61,11 @@ def display_owned_data():
                         st.warning("No changes made!")
                     else:
                         add_remove_data_receiver(data_id, options)
+            with public:
+                st.checkbox(label="Make this droplet data be public?", value=public_status,
+                            key=f"data_public_{data_id}", on_change=change_data_p_status,
+                            args=[data_id])
+
 
 
 def display_settings():
@@ -116,4 +122,6 @@ def display_settings():
                         else:
                             add_remove_sett_receiver(setting['id'], options)
                 with public:
-                    print()
+                    st.checkbox(label="Make this setting be public?", value=setting['public'],
+                                key=f"setting_public_{setting['id']}", on_change=change_sett_p_status,
+                                args=[setting['id']])
