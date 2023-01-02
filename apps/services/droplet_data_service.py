@@ -51,7 +51,7 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
 def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename, data_type):
     user_id = get_user_id(username)
     insert_query = "INSERT INTO Analysis_data (uploader, upload_datetime, public, file_size_bytes,file_path, " \
-                   "analysis_data_description, analysis_data_name, data_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s)"
+                   "analysis_data_description, analysis_data_name, data_type) VALUES (%s,%s,%s,%s,%s,%s,%s,%s);"
     vals = [user_id, date_time, is_public, file_size, full_path, description, filename, data_type]
     execute_query(insert_query, vals)
 
@@ -113,7 +113,7 @@ def get_all_data_options():
                 "JOIN User ON (uploader=user_id) " \
                 "WHERE active AND (uploader=%s OR public " \
                 "OR analysis_data_id IN " \
-                "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL))"
+                "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL));"
         rows = execute_query_to_get_data(query, (user_id, user_id))
         for row in rows:
             option = row[0] + ", by " + row[1] + " " + str(row[2])
@@ -147,5 +147,5 @@ def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     os.rename(old_path, new_path)
     query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
-            f"WHERE analysis_data_id={data_id}"
+            f"WHERE analysis_data_id={data_id};"
     execute_query(query)

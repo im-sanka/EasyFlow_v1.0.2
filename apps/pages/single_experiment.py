@@ -41,6 +41,12 @@ def page():
         if 'analysis_settings' not in streamlit.session_state:
             streamlit.session_state['analysis_settings'] = set_default_settings(data_frame)
         pick_settings(data_frame)
+
+        # incase user no longer has access to shared setting
+        if streamlit.session_state['current_setting'] not in streamlit.session_state['all_settings']:
+            streamlit.session_state['current_setting'] = 'Default'
+            streamlit.session_state['analysis_settings'] = set_default_settings(data_frame)
+
         streamlit.info(streamlit.session_state['analysis_settings']['description'])
         rollback()
     with store_settings:
@@ -48,8 +54,6 @@ def page():
                        "you must leave default the value name field. You can change description and parameters "
                        "by changing input fields accordingly and clicking on Save/Update button.")
         create_save_form()
-
-
 
     #streamlit.write(data_frame.head())
     # Display table with the uploaded data
@@ -84,8 +88,6 @@ def page():
             streamlit.warning("Please adjust the file input accordingly. For further explanation, check the 'Instruction' tab")
         #
         # streamlit.header("")
-
-
 
         # streamlit.header("Specific-case module")
         # try:
@@ -161,7 +163,3 @@ def page():
         #     # )
         # except:
         #     streamlit.warning("Please adjust the file input accordingly. For further explanation, check the 'Instruction' tab")
-        #
-        #
-
-
