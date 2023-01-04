@@ -117,18 +117,23 @@ def change_settings():
 
 
 def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
-    user_id = get_user_id(st.session_state['username'])
-    if owned:
-        query = "SELECT analysis_settings_id, name, body, description, username, public " \
-                "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s;"
-        val = [user_id]
+    if st.session_state['authentication_status']:
+        user_id = get_user_id(st.session_state['username'])
+        if owned:
+            query = "SELECT analysis_settings_id, name, body, description, username, public " \
+                    "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s;"
+            val = [user_id]
+        else:
+            query = "SELECT A.analysis_settings_id, name, body, description, username, public " \
+                    "FROM Analysis_settings as A " \
+                    "JOIN User as U ON A.uploader=U.user_id " \
+                    "WHERE uploader=%s OR public=TRUE OR A.analysis_settings_id IN " \
+                    "(SELECT S.analysis_settings_id FROM Shared_settings as S WHERE user_id=%s AND end_date IS NULL);"
+            val = [user_id, user_id]
     else:
-        query = "SELECT A.analysis_settings_id, name, body, description, username, public " \
-                "FROM Analysis_settings as A " \
-                "JOIN User as U ON A.uploader=U.user_id " \
-                "WHERE uploader=%s OR public=TRUE OR A.analysis_settings_id IN " \
-                "(SELECT S.analysis_settings_id FROM Shared_settings as S WHERE user_id=%s AND end_date IS NULL);"
-        val = [user_id, user_id]
+        query = "SELECT analysis_settings_id, name, body, description, username, public " \
+                    "FROM Analysis_settings, User WHERE uploader=User.user_id AND public;"
+        val = []
     results = execute_query_to_get_data(query, val)
     for row in results:
         name = row[1] + " by " + row[4]
