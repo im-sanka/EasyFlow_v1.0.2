@@ -49,11 +49,12 @@ def page():
 
         streamlit.info(streamlit.session_state['analysis_settings']['description'])
         rollback()
-    with store_settings:
-        streamlit.info("To update your settings you first need to select them in setting selection menu. Afterwards, "
-                       "you must leave default the value name field. You can change description and parameters "
-                       "by changing input fields accordingly and clicking on Save/Update button.")
-        create_save_form()
+    if streamlit.session_state['authentication_status']:
+        with store_settings:
+            streamlit.info("To update your settings you first need to select them in setting selection menu. Afterwards, "
+                           "you must leave default the value name field. You can change description and parameters "
+                           "by changing input fields accordingly and clicking on Save/Update button.")
+            create_save_form()
 
     #streamlit.write(data_frame.head())
     # Display table with the uploaded data

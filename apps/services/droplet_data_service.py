@@ -114,11 +114,18 @@ def get_all_data_options():
                 "WHERE active AND (uploader=%s OR public " \
                 "OR analysis_data_id IN " \
                 "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL));"
-        rows = execute_query_to_get_data(query, (user_id, user_id))
-        for row in rows:
-            option = row[0] + ", by " + row[1] + " " + str(row[2])
-            options_dict[option] = {'username': row[1], 'filename': row[0], 'time': str(row[2]), 'path': row[3]}
-            options.append(option)
+        val = [user_id, user_id]
+    else:
+        query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
+                "JOIN User ON (uploader=User.user_id) " \
+                "WHERE active AND public;"
+        val = []
+    rows = execute_query_to_get_data(query, val)
+
+    for row in rows:
+        option = row[0] + ", by " + row[1] + " " + str(row[2])
+        options_dict[option] = {'username': row[1], 'filename': row[0], 'time': str(row[2]), 'path': row[3]}
+        options.append(option)
     return options, options_dict
 
 
