@@ -34,8 +34,7 @@ def store_droplet_data():
 
 
 def store_data_on_machine(file, username, date_time, filename, data_type):
-    save_path = "/home/daniel/easyflow/storage/droplet_data/"
-    # save_path = "/home/ubuntu/storage/droplet_data/"
+    save_path = get_save_path()
     if data_type == "csv":
         filename = filename[:len(filename) - 4]
     else:
@@ -47,6 +46,10 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
         f.close()
     return full_path, filename
 
+def get_save_path():
+    # save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    save_path = "/home/ubuntu/storage/droplet_data/"
+    return save_path
 
 def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename, data_type):
     user_id = get_user_id(username)
