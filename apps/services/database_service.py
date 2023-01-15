@@ -27,9 +27,3 @@ def get_user_id(username):
     user_id = result[0][0]
     return user_id
 
-def get_my_data_id(data_name):
-    user_id = get_user_id(st.session_state['username'])
-    query = "SELECT analysis_data_id FROM Analysis_data WHERE analysis_data_name=%s AND uploader=%s;"
-    vals = (data_name, user_id)
-    data_id = execute_query_to_get_data(query, vals)[0][0]
-    return data_id

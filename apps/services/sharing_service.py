@@ -1,5 +1,5 @@
 import streamlit as st
-from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id, get_my_data_id
+from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id
 
 
 def add_remove_data_receiver(data_id, options):

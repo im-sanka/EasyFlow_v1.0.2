@@ -1,6 +1,7 @@
 import streamlit as st
 from PIL import Image
-from apps.pages import data_overview, instruction, registration, store_data, psw_reset, single_experiment
+from apps.pages import data_overview, instruction, registration, store_data, psw_reset, single_experiment, \
+    groups_overview
 import apps.services.authentication_service as auth_service
 from multipage_backbone import MultiPages
 
@@ -22,11 +23,9 @@ elif st.session_state['authentication_status']:
     page.add_page("Data overview", data_overview.page)
     auth_service.enable_logout()
     st.write(f"Welcome {st.session_state['name']}")
-    # Add all your applications (pages) here
-    # For adding app, the python file should be in the apps folder first and call the app as page() for making it clean here.
     # Example --> page.add_page("Name which will be shown in the markdown page", python script with .page)
     page.add_page("Instruction", instruction.page)
-
+    page.add_page("Group overview", groups_overview.page)
     page.add_page("Store droplet data", store_data.page)
     # page.add_page("Multi Experiment", multi_experiment.page)
     page.add_page("Password reset", psw_reset.page)
