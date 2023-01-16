@@ -67,7 +67,6 @@ def display_owned_data():
                             args=[data_id])
 
 
-
 def display_settings():
     st.subheader("Saved droplet analysis settings")
     options = get_all_available_settings([], {}, True)
