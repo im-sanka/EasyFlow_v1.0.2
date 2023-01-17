@@ -1,6 +1,6 @@
 import streamlit as st
 from apps.services.group_service import group_creation_form, get_all_users_groups, rename_group, manage_members, \
-    delete_group, droplet_data_sharing_management
+    delete_group, droplet_data_sharing_management, analysis_setting_sharing_management
 from apps.services.database_service import get_user_id
 
 
@@ -37,6 +37,9 @@ def page():
                 with droplet_data_sharing:
                     if group_creator_id == user_id or my_role == 1:
                         droplet_data_sharing_management(group_id, user_id)
+                with settings_sharing:
+                    if group_creator_id == user_id or my_role == 1:
+                        analysis_setting_sharing_management(group_id, user_id)
 
     else:
         st.write("Nothing to see here citizen. Move along.")

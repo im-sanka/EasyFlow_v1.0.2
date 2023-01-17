@@ -1,6 +1,7 @@
 import streamlit as st
 from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id
 import json
+from apps.services.group_service import get_all_shared_settings
 
 
 def set_default_settings(data_frame):
@@ -84,6 +85,8 @@ def create_save_form():
         submit = st.form_submit_button(label="Submit")
         st.warning("Inserting an existing name will update owned setting with the same name.")
         if submit:
+            print(st.session_state['setting_names'])
+            print(name)
             if name in st.session_state['setting_names']:
                 save_settings(name, description, public, user_id, True)
             else:
@@ -98,10 +101,11 @@ def pick_settings(data_frame):
         st.session_state['current_setting'] = "Default"
     if 'all_settings' not in st.session_state:
         st.session_state['all_settings'] = {}
-    options = ['Default']
+    def_option = ['Default']
     settings_dict = {'Default': set_default_settings(data_frame)}
-    options = get_all_available_settings(options, settings_dict, False)
-    st.selectbox("Pick your settings", key='settings_sbox', index=0, options=options,
+    options = get_all_available_settings(def_option, settings_dict, False)
+    options_plus_groups = get_all_shared_settings(options)
+    st.selectbox("Pick your settings", key='settings_sbox', index=0, options=options_plus_groups,
                  on_change=change_settings)
 
     if st.session_state['updated_saved']:
@@ -132,7 +136,7 @@ def get_all_available_settings(options: list, settings_dict: dict, owned: bool):
             val = [user_id, user_id]
     else:
         query = "SELECT analysis_settings_id, name, body, description, username, public " \
-                    "FROM Analysis_settings, User WHERE uploader=User.user_id AND public;"
+                "FROM Analysis_settings, User WHERE uploader=User.user_id AND public;"
         val = []
     results = execute_query_to_get_data(query, val)
     for row in results:
@@ -178,6 +182,7 @@ def delete_settings(name):
     query = "DELETE FROM Analysis_settings WHERE name=%s AND uploader=%s;"
     vals = (name, user_id)
     execute_query(query, vals)
+
 
 def change_sett_p_status(sett_id: int):
     q_for_public_status = f"SELECT public FROM Analysis_settings WHERE analysis_settings_id={sett_id}"
