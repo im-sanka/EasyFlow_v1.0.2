@@ -132,7 +132,7 @@ def get_all_data_options():
     return options, options_dict
 
 
-def get_all_owned_droplet_data():
+def get_all_owned_droplet_data() -> dict:
     droplet_data_dict = {}
     query = "SELECT analysis_data_id, upload_datetime, file_path, analysis_data_description, " \
             "analysis_data_name, data_type, public " \
@@ -162,9 +162,9 @@ def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     execute_query(query)
 
 def change_data_p_status(data_id: int):
-    q_for_public_status = f"SELECT public FROM Analysis_data WHERE analysis_data_id={data_id}"
+    q_for_public_status = f"SELECT public FROM Analysis_data WHERE analysis_data_id={data_id};"
     old_p = execute_query_to_get_data(q_for_public_status)[0][0]
-    q_to_change_p = f"UPDATE Analysis_data SET public=%s WHERE analysis_data_id={data_id}"
+    q_to_change_p = f"UPDATE Analysis_data SET public=%s WHERE analysis_data_id={data_id};"
     if old_p == 1:
         val = [0]
     else:
