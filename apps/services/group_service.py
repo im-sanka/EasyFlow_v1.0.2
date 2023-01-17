@@ -1,5 +1,6 @@
 import streamlit as st
 from apps.services.database_service import execute_query, execute_query_to_get_data
+from apps.services.droplet_data_service import get_all_owned_droplet_data
 
 
 def group_creation_form(user_id):
@@ -101,9 +102,8 @@ def manage_members(group_id, user_id, group_name):
     current_members = get_group_member_ids(group_id)
     new_members = st.multiselect(label="Add or remove members to/from the group", key=f"manage_members_{group_id}",
                                  options=pot_members.keys(), default=current_members.keys())
-    if st.button(label="Update member list", key=f"upd_mmbr_btn_{group_id}"):
+    if st.button(label="Update member list", key=f"upd_member_btn_{group_id}"):
         if new_members != list(current_members.keys()):
-            print("Here")
             print(new_members)
             print(current_members.keys())
             add_remove_members(current_members, new_members, pot_members, user_id, group_name)
@@ -113,7 +113,63 @@ def manage_members(group_id, user_id, group_name):
 
 
 def delete_group(group_id, user_id):
-    query = f"DELETE FROM EF_group WHERE group_id={group_id} WHERE creator={user_id};"
-    execute_query(query)
-    st.experimental_rerun()
+    sure = st.checkbox(label="Are you sure you want to delete this group?")
+    delete = st.button("Delete")
+    if sure and delete:
+        query = f"DELETE FROM EF_group WHERE group_id={group_id} AND creator={user_id};"
+        execute_query(query)
+        st.experimental_rerun()
 
+
+def droplet_data_sharing_management(group_id, user_id):
+    all_possible_owned_data = get_all_owned_droplet_data()
+    old_shared = get_shared_group_data(group_id, user_id)
+
+    pot_names = get_names_as_key(all_possible_owned_data)
+    old_names = get_names_as_key(old_shared)
+    new_names = st.multiselect(label="Share and unshare your droplet data", options=list(pot_names.keys()),
+                               default=list(old_names.keys()))
+
+    st.write("Update list of shared data")
+    if st.button("Update"):
+        if old_names != new_names:
+            share_unshare_data(pot_names, old_names, new_names, group_id, user_id)
+            st.experimental_rerun()
+        else:
+            st.error("No changes were made!")
+
+
+def get_shared_group_data(group_id, user_id) -> dict:
+    query = f"SELECT G.analysis_data_id, Ad.analysis_data_name FROM Group_analysis_data AS G " \
+            f"JOIN Analysis_data AS Ad ON Ad.analysis_data_id=G.analysis_data_id " \
+            f"WHERE G.uploader={user_id} AND G.group_id={group_id};"
+    result = execute_query_to_get_data(query)
+    shared_data = {}
+    for row in result:
+        shared_data[row[0]] = row[1]
+    return shared_data
+
+
+def share_unshare_data(pot_names, currently_shared, new_shared, group_id, user_id):
+    sym_diff = list(set(currently_shared.keys()).symmetric_difference(new_shared))
+    for name in sym_diff:
+        if name in new_shared:
+            query = f"INSERT INTO Group_analysis_data(group_id, analysis_data_id, uploader) " \
+                    f"VALUES ({group_id},{pot_names[name]},{user_id});"
+        else:
+            query = f"DELETE FROM Group_analysis_data WHERE analysis_data_id={pot_names[name]} " \
+                    f"AND uploader={user_id} AND group_id={group_id};"
+        execute_query(query)
+
+
+def get_names_as_key(dictionary: dict) -> dict:
+    new_d = {}
+    for d_id in dictionary:
+        body = dictionary[d_id]
+        if type(body) is dict:
+            name = body['filename']
+            new_d[name] = d_id
+        elif type(body) is str:
+            name = body
+            new_d[name] = d_id
+    return new_d

@@ -1,9 +1,11 @@
 import streamlit as st
-from apps.services.group_service import group_creation_form, get_all_users_groups, rename_group, manage_members, delete_group
+from apps.services.group_service import group_creation_form, get_all_users_groups, rename_group, manage_members, \
+    delete_group, droplet_data_sharing_management
 from apps.services.database_service import get_user_id
 
+
 def page():
-    if st.session_state['authentication_state']:
+    if st.session_state['authentication_status']:
         st.subheader("Create your own group")
         my_username = st.session_state['username']
         user_id = get_user_id(my_username)
@@ -26,11 +28,15 @@ def page():
                     if user_id == group_creator_id:
                         manage_members(group_id, user_id, group_name)
                     else:
-                        st.warning("No right to rename groups")
+                        st.warning("No manage members")
                 with delete:
                     if user_id == group_creator_id:
-                        delete_group(group_id)
+                        delete_group(group_id, user_id)
+
+                droplet_data_sharing, settings_sharing = st.columns(2)
+                with droplet_data_sharing:
+                    if group_creator_id == user_id or my_role == 1:
+                        droplet_data_sharing_management(group_id, user_id)
+
     else:
         st.write("Nothing to see here citizen. Move along.")
-
-
