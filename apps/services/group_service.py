@@ -1,5 +1,7 @@
+import json
+
 import streamlit as st
-from apps.services.database_service import execute_query, execute_query_to_get_data
+from apps.services.database_service import execute_query, execute_query_to_get_data, get_user_id
 from apps.services.droplet_data_service import get_all_owned_droplet_data
 
 
@@ -34,8 +36,9 @@ def create_group(group_name: str, members, pot_members, user_id):
     g_query = f"INSERT INTO EF_group(group_name, creator) values(%s, %s);"
     vals = (group_name, user_id)
     execute_query(g_query, vals)
-    if len(members) > 0:
-        add_remove_members({}, members, pot_members, user_id, group_name)
+
+    add_remove_members({}, members, pot_members, user_id, group_name)
+    add_owner(user_id, group_name)
 
 
 def add_remove_members(current_members: dict, selected_members: dict, all_pot_members, user_id, group_name):
@@ -44,16 +47,23 @@ def add_remove_members(current_members: dict, selected_members: dict, all_pot_me
     for member_name in unique:
         if member_name in selected_members:
             member_id = all_pot_members[member_name]
-            assign_owner_q = "INSERT INTO Group_member(group_id, user_id, member_role_id) VALUES " \
-                             "((SELECT group_id FROM EF_group WHERE creator=%s AND group_name=%s), %s, %s);"
+            add_member_q = "INSERT INTO Group_member(group_id, user_id, member_role_id) VALUES " \
+                           "((SELECT group_id FROM EF_group WHERE creator=%s AND group_name=%s), %s, %s);"
             vals = [user_id, group_name, member_id, def_role]
-            execute_query(assign_owner_q, vals)
+            execute_query(add_member_q, vals)
         else:
             member_id = all_pot_members[member_name]
-            assign_owner_q = "UPDATE Group_member " \
-                             "SET end_date=Now() WHERE user_id=%s;"
+            terminate_membership_q = "UPDATE Group_member " \
+                                     "SET end_date=Now() WHERE user_id=%s;"
             vals = [member_id]
-            execute_query(assign_owner_q, vals)
+            execute_query(terminate_membership_q, vals)
+
+
+def add_owner(user_id: int, group_name: str):
+    add_owner_q = "INSERT INTO Group_member(group_id, user_id, member_role_id) VALUES " \
+                  f"((SELECT group_id FROM EF_group WHERE creator={user_id} AND group_name=%s), {user_id}, 3);"
+    vals = [group_name]
+    execute_query(add_owner_q, vals)
 
 
 def get_all_users_groups(user_id) -> dict:
@@ -64,7 +74,7 @@ def get_all_users_groups(user_id) -> dict:
     result = execute_query_to_get_data(query, vals)
     groups = {}
     for row in result:
-        groups[row[0]] = [row[1], row[2], row[1]]
+        groups[row[0]] = [row[1], row[2], row[3]]
     return groups
 
 
@@ -89,7 +99,7 @@ def get_group_member_ids(group_id) -> dict:
     query = "SELECT U.user_id, U.username FROM EF_group AS G " \
             "JOIN Group_member Gm on G.group_id = Gm.group_id " \
             "JOIN User AS U on Gm.user_id = U.user_id " \
-            "WHERE G.group_id=%s AND end_date IS NULL;"
+            "WHERE G.group_id=%s AND end_date IS NULL AND Gm.member_role_id<>3;"
     val = [group_id]
     result = execute_query_to_get_data(query, val)
     for row in result:
@@ -101,7 +111,7 @@ def manage_members(group_id, user_id, group_name):
     pot_members = get_all_possible_members(user_id)
     current_members = get_group_member_ids(group_id)
     new_members = st.multiselect(label="Add or remove members to/from the group", key=f"manage_members_{group_id}",
-                                 options=pot_members.keys(), default=current_members.keys())
+                                 options=pot_members.keys(), default=list(current_members.keys()))
     if st.button(label="Update member list", key=f"upd_member_btn_{group_id}"):
         if new_members != list(current_members.keys()):
             print(new_members)
@@ -113,8 +123,8 @@ def manage_members(group_id, user_id, group_name):
 
 
 def delete_group(group_id, user_id):
-    sure = st.checkbox(label="Are you sure you want to delete this group?")
-    delete = st.button("Delete")
+    sure = st.checkbox(label="Are you sure you want to delete this group?", key=f"sure_delete_{group_id}")
+    delete = st.button("Delete", key=f"delete_group_btn_{group_id}")
     if sure and delete:
         query = f"DELETE FROM EF_group WHERE group_id={group_id} AND creator={user_id};"
         execute_query(query)
@@ -128,10 +138,10 @@ def droplet_data_sharing_management(group_id, user_id):
     pot_names = get_names_as_key(all_possible_owned_data)
     old_names = get_names_as_key(old_shared)
     new_names = st.multiselect(label="Share and unshare your droplet data", options=list(pot_names.keys()),
-                               default=list(old_names.keys()))
+                               default=list(old_names.keys()), key=f"share_group_data_{group_id}")
 
     st.write("Update list of shared data")
-    if st.button("Update"):
+    if st.button("Update", key=f"update_shared_group_data_{group_id}"):
         if old_names != new_names:
             share_unshare_data(pot_names, old_names, new_names, group_id, user_id)
             st.experimental_rerun()
@@ -149,6 +159,8 @@ def get_shared_group_data(group_id, user_id) -> dict:
         shared_data[row[0]] = row[1]
     return shared_data
 
+
+# TODO Allow group creator unshare any shared data.
 
 def share_unshare_data(pot_names, currently_shared, new_shared, group_id, user_id):
     sym_diff = list(set(currently_shared.keys()).symmetric_difference(new_shared))
@@ -173,3 +185,104 @@ def get_names_as_key(dictionary: dict) -> dict:
             name = body
             new_d[name] = d_id
     return new_d
+
+
+def analysis_setting_sharing_management(group_id, user_id):
+    all_owned_setting_names = get_all_available_settings(user_id)
+    all_owned_settings = st.session_state['all_settings']
+    cut_owned_settings = {}
+    for key in all_owned_setting_names:
+        setting_id = all_owned_settings[key]['id']
+        setting_name = all_owned_settings[key]['name']
+        cut_owned_settings[setting_name] = setting_id
+    shared_settings = get_my_shared_settings(group_id, user_id)
+    new_shared_settings = st.multiselect(label="Share or unshare your settings with others in the group",
+                                         key=f"share_group_settings_{group_id}",
+                                         options=list(cut_owned_settings.keys()),
+                                         default=list(shared_settings.keys()))
+    st.write("Update list of shared settings")
+    if st.button(label="Update", key=f"update_group_sett_list_{group_id}"):
+        if list(shared_settings.keys()) != new_shared_settings:
+            share_unshare_settings(cut_owned_settings, shared_settings, new_shared_settings, group_id, user_id)
+        else:
+            st.error("No changes were made!")
+
+
+def get_all_available_settings(user_id):
+    options = []
+    settings_dict = {}
+    query = "SELECT analysis_settings_id, name, body, description, username, public " \
+            "FROM Analysis_settings, User WHERE uploader=User.user_id AND uploader=%s;"
+    val = [user_id]
+
+    results = execute_query_to_get_data(query, val)
+    for row in results:
+        name = row[1] + " by " + row[4]
+        body = json.loads(row[2])
+        description = row[3]
+        options.append(name)
+        settings_dict[name] = {'id': row[0],
+                               'name': row[1],
+                               'username': row[4],
+                               'description': description,
+                               'public': row[5],
+                               'body': body
+                               }
+    st.session_state['all_settings'] = settings_dict
+    return options
+
+
+def get_my_shared_settings(group_id: int, user_id: int) -> dict:
+    query = f"SELECT A.name, A.analysis_settings_id FROM Group_analysis_settings AS G " \
+            f"JOIN Analysis_settings AS A on G.analysis_settings_id = A.analysis_settings_id " \
+            f"WHERE group_id={group_id} AND A.uploader = {user_id};"
+    result = execute_query_to_get_data(query)
+    shared_settings = {}
+    for row in result:
+        shared_settings[row[0]] = row[1]
+    return shared_settings
+
+
+def share_unshare_settings(all_owned: dict, currently_shared: dict, new_shared: list, group_id: int, user_id: int):
+    sym_diff = list(set(currently_shared.keys()).symmetric_difference(new_shared))
+    for name in sym_diff:
+        if name in new_shared:
+            query = f"INSERT INTO Group_analysis_settings(group_id, analysis_settings_id, uploader) " \
+                    f"VALUES ({group_id},{all_owned[name]},{user_id});"
+        else:
+            query = f"DELETE FROM Group_analysis_settings WHERE analysis_settings_id={all_owned[name]} " \
+                    f"AND uploader={user_id} AND group_id={group_id};"
+        execute_query(query)
+
+
+def get_all_shared_settings(names: list) -> list:
+    user_id = get_user_id(st.session_state['username'])
+    query = "SELECT E.group_id,E.group_name,A.analysis_settings_id,A.name,body,description,username,public " \
+            "FROM Group_analysis_settings AS Gs " \
+            "JOIN User AS U ON Gs.uploader = U.user_id " \
+            "JOIN EF_group AS E ON E.group_id=Gs.group_id " \
+            "JOIN Analysis_settings AS A ON A.analysis_settings_id=Gs.analysis_settings_id " \
+            f"WHERE {user_id} IN (SELECT user_id FROM Group_member WHERE group_id IN " \
+            f"(SELECT group_id FROM Group_member AS Gm WHERE Gm.user_id={user_id}));"
+
+    settings_dict = st.session_state['all_settings']
+    results = execute_query_to_get_data(query)
+    for row in results:
+        if row[6] != st.session_state['username']:
+            name_basic = row[3] + " by " + row[6]
+            if name_basic in names:
+                names.remove(name_basic)
+                del settings_dict[name_basic]
+            name = f"{row[3]} by {row[6]}, shared in group {row[1]}"
+
+            body = json.loads(row[4])
+            names.append(name)
+            settings_dict[name] = {'id': row[2],
+                                   'name': row[3],
+                                   'username': row[6],
+                                   'description': row[5],
+                                   'public': row[7],
+                                   'body': body
+                                   }
+    st.session_state['all_settings'] = settings_dict
+    return names

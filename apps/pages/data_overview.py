@@ -7,6 +7,7 @@ from apps.services.sharing_service import get_all_possible_receivers, get_data_r
     get_setting_receivers, add_remove_sett_receiver
 
 
+
 def page():
     st.subheader("Saved droplet analysis data")
     if st.session_state['username'] is not None:
@@ -16,6 +17,7 @@ def page():
 
 def display_owned_data():
     owned_droplet_datasets = get_all_owned_droplet_data()
+
     for data_id in owned_droplet_datasets.keys():
         filename = owned_droplet_datasets[data_id]['filename']
         description = owned_droplet_datasets[data_id]['description']

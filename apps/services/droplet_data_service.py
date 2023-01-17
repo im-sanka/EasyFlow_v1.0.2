@@ -46,10 +46,12 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
         f.close()
     return full_path, filename
 
+
 def get_save_path():
     # save_path = "/home/daniel/easyflow/storage/droplet_data/"
     save_path = "/home/ubuntu/storage/droplet_data/"
     return save_path
+
 
 def store_data_in_database(full_path, username, date_time, description, is_public, file_size, filename, data_type):
     user_id = get_user_id(username)
@@ -61,7 +63,6 @@ def store_data_in_database(full_path, username, date_time, description, is_publi
 
 def data_frame_by_rendering_file_selection():
     upload = st.checkbox("Upload file from system")
-    data_frame = None
     if upload:
         data_frame = data_frame_by_upload()
     else:
@@ -88,17 +89,11 @@ def data_frame_by_upload() -> Union[dict[Any, DataFrame], DataFrame, None]:
 
 
 def data_frame_by_file_selection() -> Union[dict[Any, DataFrame], DataFrame, None]:
-    data_frame = None
     options, options_dict = get_all_data_options()
     option = st.selectbox("You can select any available data set.", options=options)
     st.write(option)
     if option == "Select data set you want":
         return
-    filename = options_dict[option]['filename']
-    username = options_dict[option]['username']
-    time = options_dict[option]['time']
-    complete_filename = filename + "_" + username + "_" + time
-
     try:
         return pandas.read_excel(options_dict[option]['path'])
     except ValueError:
@@ -112,23 +107,51 @@ def get_all_data_options():
     options = ["Select data set you want"]
     if st.session_state['authentication_status']:
         user_id = get_user_id(st.session_state['username'])
-        query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
-                "JOIN User ON (uploader=user_id) " \
-                "WHERE active AND (uploader=%s OR public " \
-                "OR analysis_data_id IN " \
-                "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL));"
+        usual_query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
+                      "JOIN User ON (uploader=user_id) " \
+                      "WHERE active AND (uploader=%s OR public " \
+                      "OR analysis_data_id IN " \
+                      "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL));"
         val = [user_id, user_id]
     else:
-        query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
-                "JOIN User ON (uploader=User.user_id) " \
-                "WHERE active AND public;"
+        usual_query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
+                      "JOIN User ON (uploader=User.user_id) " \
+                      "WHERE active AND public;"
         val = []
-    rows = execute_query_to_get_data(query, val)
+    result1 = execute_query_to_get_data(usual_query, val)
 
-    for row in rows:
+    for row in result1:
         option = row[0] + ", by " + row[1] + " " + str(row[2])
         options_dict[option] = {'username': row[1], 'filename': row[0], 'time': str(row[2]), 'path': row[3]}
         options.append(option)
+
+    if st.session_state['authentication_status']:
+        user_id = get_user_id(st.session_state['username'])
+        return get_shared_group_data(options, options_dict, user_id)
+
+    return options, options_dict
+
+
+def get_shared_group_data(options: list, options_dict: dict, user_id) -> tuple[list, dict]:
+    group_data_q = "SELECT E.group_id,E.group_name, analysis_data_name, username, upload_datetime, file_path " \
+                   "FROM Group_analysis_data AS Gd " \
+                   "JOIN User AS U ON Gd.uploader = U.user_id " \
+                   "JOIN EF_group AS E ON E.group_id=Gd.group_id " \
+                   "JOIN Analysis_data AS A ON A.analysis_data_id=Gd.analysis_data_id " \
+                   f"WHERE {user_id} IN (SELECT user_id FROM Group_member WHERE group_id IN " \
+                   f"(SELECT group_id FROM Group_member AS Gm WHERE Gm.user_id={user_id}));"
+
+    result2 = execute_query_to_get_data(group_data_q)
+    for row in result2:
+        if row[3] != st.session_state['username']:
+            name_basic = f"{row[2]}, by {row[3]} {str(row[4])}"
+            if name_basic in options:
+                options.remove(name_basic)
+                del options_dict[name_basic]
+            option = f"{row[2]}, by {row[3]} {str(row[4])}, shared in group {row[1]}"
+            options.append(option)
+            options_dict[option] = {'username': row[3], 'filename': row[2], 'time': str(row[4]), 'path': row[5]}
+
     return options, options_dict
 
 
@@ -160,6 +183,7 @@ def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
             f"WHERE analysis_data_id={data_id};"
     execute_query(query)
+
 
 def change_data_p_status(data_id: int):
     q_for_public_status = f"SELECT public FROM Analysis_data WHERE analysis_data_id={data_id};"

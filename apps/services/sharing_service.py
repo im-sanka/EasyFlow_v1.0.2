@@ -10,7 +10,7 @@ def add_remove_data_receiver(data_id, options):
             stop_sharing_data(data_id, receiver)
         else:
             share_data(data_id, receiver)
-
+    st.experimental_rerun()
 
 def share_data(data_id, receiver_name):
     st.write(data_id)
