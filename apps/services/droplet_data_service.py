@@ -48,8 +48,8 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
 
 
 def get_save_path():
-    save_path = "/home/daniel/easyflow/storage/droplet_data/"
-    #save_path = "/home/ubuntu/storage/droplet_data/"
+    #save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    save_path = "/home/ubuntu/storage/droplet_data/"
     return save_path
 
 
