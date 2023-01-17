@@ -17,6 +17,8 @@ image = Image.open('files/banner_new3.png')
 # page.add_page("Home", home.page)
 auth_service.enable_login()
 page.add_page("Analysis and Visualization", single_experiment.page)
+page.add_page("Instruction", instruction.page)
+
 if st.session_state['authentication_status'] is None:
     page.add_page("Registration", registration.page)
 elif st.session_state['authentication_status']:
@@ -24,7 +26,7 @@ elif st.session_state['authentication_status']:
     auth_service.enable_logout()
     st.write(f"Welcome {st.session_state['name']}")
     # Example --> page.add_page("Name which will be shown in the markdown page", python script with .page)
-    page.add_page("Instruction", instruction.page)
+
     page.add_page("Group overview", groups_overview.page)
     page.add_page("Store droplet data", store_data.page)
     # page.add_page("Multi Experiment", multi_experiment.page)

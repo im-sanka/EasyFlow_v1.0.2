@@ -3,7 +3,7 @@ import streamlit
 # This just to declare the home page
 
 def page():
-    streamlit.write("For this session, we provide one dummy data which you can download and test it in this version.")
+    streamlit.write("For this session, we provide one dummy data which you can download and test it.")
 
     with open("apps/dummy_data.csv", "rb") as file:
         btn = streamlit.download_button(

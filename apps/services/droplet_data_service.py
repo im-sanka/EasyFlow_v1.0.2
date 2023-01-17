@@ -11,14 +11,18 @@ def store_droplet_data():
     with st.form("Upload your droplet data", clear_on_submit=True):
         data_description = st.text_area('Description of your droplet data.', )
         is_public = st.checkbox("Let others use this droplet data?", value=False)
+
         uploaded_file = st.file_uploader(
             "You can upload .CSV or .XLSX files.",
-            type=["xlsx", "csv"]
+            type=["xlsx", "csv"],
+            key="droplet_data_save"
         )
+
+        filename = st.text_input("Name of your droplet data", key="droplet_data_name")
+
         submitted = st.form_submit_button("UPLOAD!")
         if submitted:
             if uploaded_file:
-                filename = uploaded_file.name
                 file_size = uploaded_file.size
                 date_time = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 username = st.session_state['username']
@@ -35,10 +39,6 @@ def store_droplet_data():
 
 def store_data_on_machine(file, username, date_time, filename, data_type):
     save_path = get_save_path()
-    if data_type == "csv":
-        filename = filename[:len(filename) - 4]
-    else:
-        filename = filename[:len(filename) - 5]
     fullname = filename + "_" + username + "_" + str(date_time) + "." + data_type
     full_path = save_path + fullname
     with open(os.path.join(save_path, fullname), "wb") as f:
@@ -48,8 +48,8 @@ def store_data_on_machine(file, username, date_time, filename, data_type):
 
 
 def get_save_path():
-    # save_path = "/home/daniel/easyflow/storage/droplet_data/"
-    save_path = "/home/ubuntu/storage/droplet_data/"
+    save_path = "/home/daniel/easyflow/storage/droplet_data/"
+    #save_path = "/home/ubuntu/storage/droplet_data/"
     return save_path
 
 
