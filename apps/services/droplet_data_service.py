@@ -169,7 +169,7 @@ def get_all_owned_droplet_data() -> dict:
 
 
 def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
-    query = "UPDATE Analysis_data SET active=0, file_path=NULL WHERE analysis_data_id=%s; "
+    query = "UPDATE Analysis_data SET active=0 WHERE analysis_data_id=%s; "
     execute_query(query, [droplet_analysis_id])
     os.remove(filepath)
 
