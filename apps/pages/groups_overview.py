@@ -43,6 +43,5 @@ def page():
                     if group_creator_id == user_id or my_role == 1:
                         analysis_setting_sharing_management(group_id, user_id)
 
-
     else:
         st.write("Nothing to see here citizen. Move along.")
