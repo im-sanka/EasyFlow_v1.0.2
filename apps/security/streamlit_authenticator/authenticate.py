@@ -164,10 +164,12 @@ class Authenticate:
                 st.session_state['authentication_status'] = False
             else:
                 return False
+
     """
     Modified, now returns affiliation. 
     Return variables are not used anywhere currently.
     """
+
     def login(self, form_name: str, location: str = 'main') -> tuple:
         """
         Creates a login widget.
@@ -207,7 +209,7 @@ class Authenticate:
                     self._check_credentials()
 
         return st.session_state['name'], st.session_state['authentication_status'], \
-            st.session_state['username'], st.session_state['affiliation']
+               st.session_state['username'], st.session_state['affiliation']
 
     # Modified by Daniel. Added removal of affiliation from session_state
     def logout(self, button_name: str, location: str = 'main'):
@@ -305,7 +307,9 @@ class Authenticate:
     """
     Modified by Daniel. Removed typical yankee typo from "preauthorisation"
     """
-    def _register_credentials(self, username: str, name: str, password: str, email: str, affiliation: str, preauthorisation: bool):
+
+    def _register_credentials(self, username: str, name: str, password: str, email: str, affiliation: str,
+                              preauthorisation: bool):
         """
         Adds to credentials dictionary the new user's information.
 
@@ -330,7 +334,7 @@ class Authenticate:
         if preauthorisation:
             self.preauthorized['emails'].remove(email)
         self._check_cookie()
-        st.session_state['username'] = self.username
+        st.session_state['username'] = username
         self.username = username
         self.password = password
         st.write(self.username + self.password)
@@ -376,7 +380,8 @@ class Authenticate:
         new_password_repeat = register_user_form.text_input('Repeat password', type='password')
 
         if register_user_form.form_submit_button('Register'):
-            if len(new_email) and len(new_username) and len(new_name) and len(new_affiliation) and len(new_password) > 0:
+            if len(new_email) and len(new_username) and len(new_name) and len(new_affiliation) and len(
+                    new_password) > 0:
                 if new_username not in self.credentials['usernames']:
                     if new_password == new_password_repeat:
                         if len(new_password) > 7:
@@ -570,3 +575,11 @@ class Authenticate:
                     raise UpdateError('New and current values are the same')
             if len(new_value) == 0:
                 raise UpdateError('New value not provided')
+
+    def logout_on_delete_account(self):
+        self.cookie_manager.delete(self.cookie_name)
+        st.session_state['logout'] = True
+        st.session_state['name'] = None
+        st.session_state['username'] = None
+        st.session_state['authentication_status'] = None
+        st.session_state['affiliation'] = None
