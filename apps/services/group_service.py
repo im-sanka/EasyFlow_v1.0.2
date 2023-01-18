@@ -286,3 +286,16 @@ def get_all_shared_settings(names: list) -> list:
                                    }
     st.session_state['all_settings'] = settings_dict
     return names
+
+
+def leave_group(group_id: int, user_id: int):
+    query = "UPDATE Group_member SET end_date=Now() " \
+            f"WHERE user_id={user_id} AND group_id={group_id} AND end_date IS NULL;"
+    sure = st.checkbox(label="Are you sure you want to leave this group?", value=False,
+                       key=f"leave_group_confirm_{group_id}")
+    if st.button(label="Leave group", key=f"leave_group_btn_{group_id}"):
+        if sure:
+            execute_query(query)
+            st.experimental_rerun()
+        else:
+            st.error("You must first confirm your intention to leave the group!")
