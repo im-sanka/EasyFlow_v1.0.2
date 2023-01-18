@@ -109,14 +109,14 @@ def get_all_data_options():
         user_id = get_user_id(st.session_state['username'])
         usual_query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
                       "JOIN User ON (uploader=user_id) " \
-                      "WHERE active AND (uploader=%s OR public " \
+                      "WHERE active=1 AND (uploader=%s OR public " \
                       "OR analysis_data_id IN " \
                       "(SELECT analysis_data_id FROM Shared_data WHERE user_id=%s and end_date is NULL));"
         val = [user_id, user_id]
     else:
         usual_query = "SELECT analysis_data_name, username, upload_datetime, file_path FROM Analysis_data " \
                       "JOIN User ON (uploader=User.user_id) " \
-                      "WHERE active AND public;"
+                      "WHERE active=1 AND public;"
         val = []
     result1 = execute_query_to_get_data(usual_query, val)
 
@@ -139,7 +139,7 @@ def get_shared_group_data(options: list, options_dict: dict, user_id) -> tuple[l
                    "JOIN EF_group AS E ON E.group_id=Gd.group_id " \
                    "JOIN Analysis_data AS A ON A.analysis_data_id=Gd.analysis_data_id " \
                    f"WHERE {user_id} IN (SELECT user_id FROM Group_member WHERE group_id IN " \
-                   f"(SELECT group_id FROM Group_member AS Gm WHERE Gm.user_id={user_id}));"
+                   f"(SELECT group_id FROM Group_member AS Gm WHERE Gm.user_id={user_id})) AND active=1;"
 
     result2 = execute_query_to_get_data(group_data_q)
     for row in result2:
@@ -159,7 +159,7 @@ def get_all_owned_droplet_data() -> dict:
     droplet_data_dict = {}
     query = "SELECT analysis_data_id, upload_datetime, file_path, analysis_data_description, " \
             "analysis_data_name, data_type, public " \
-            "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s);"
+            "FROM Analysis_data, User WHERE uploader=user_id AND (username=%s) AND active=1;"
     rows = execute_query_to_get_data(query, [st.session_state['username']])
     for row in rows:
         droplet_data_dict[row[0]] = \
