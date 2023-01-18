@@ -1,6 +1,6 @@
 import streamlit as st
 from apps.services.group_service import group_creation_form, get_all_users_groups, rename_group, manage_members, \
-    delete_group, droplet_data_sharing_management, analysis_setting_sharing_management
+    delete_group, droplet_data_sharing_management, analysis_setting_sharing_management, leave_group
 from apps.services.database_service import get_user_id
 
 
@@ -18,7 +18,7 @@ def page():
             group_creator_id = my_groups[group_id][1]
             my_role = my_groups[group_id][2]
             with st.expander(label=group_name, expanded=False):
-                rename, members, delete = st.columns(3)
+                rename, members, delete_leave = st.columns(3)
                 with rename:
                     if user_id == group_creator_id:
                         rename_group(group_id, group_name)
@@ -28,10 +28,12 @@ def page():
                     if user_id == group_creator_id:
                         manage_members(group_id, user_id, group_name)
                     else:
-                        st.warning("No manage members")
-                with delete:
+                        st.warning("No right to manage members")
+                with delete_leave:
                     if user_id == group_creator_id:
                         delete_group(group_id, user_id)
+                    else:
+                        leave_group(group_id, user_id)
 
                 droplet_data_sharing, settings_sharing = st.columns(2)
                 with droplet_data_sharing:
