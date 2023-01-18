@@ -175,8 +175,7 @@ def delete_owned_droplet_dataset(droplet_analysis_id, filepath):
 
 
 def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
-    path = "/home/daniel/easyflow/storage/droplet_data/"
-    # path = "/home/ubuntu/storage/droplet_data/"
+    path = get_save_path()
     old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     os.rename(old_path, new_path)
