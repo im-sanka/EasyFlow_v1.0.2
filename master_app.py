@@ -1,7 +1,7 @@
 import streamlit as st
 from PIL import Image
 from apps.pages import data_overview, instruction, registration, store_data, account_management, single_experiment, \
-    groups_overview
+    groups_overview, settings_overview
 import apps.services.authentication_service as auth_service
 from multipage_backbone import MultiPages
 
@@ -23,6 +23,7 @@ if st.session_state['authentication_status'] is None:
     page.add_page("Registration", registration.page)
 elif st.session_state['authentication_status']:
     page.add_page("Data overview", data_overview.page)
+    page.add_page("Setings overview", settings_overview.page)
     auth_service.enable_logout()
     st.write(f"Welcome {st.session_state['name']}")
     # Example --> page.add_page("Name which will be shown in the markdown page", python script with .page)

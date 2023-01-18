@@ -1,6 +1,6 @@
 import streamlit as st
 from apps.services.droplet_data_service import get_all_owned_droplet_data, delete_owned_droplet_dataset, \
-    rename_droplet_data, change_data_p_status
+    rename_droplet_data, change_data_p_status, change_data_data_description
 
 from apps.services.sharing_service import get_all_possible_receivers, get_data_receivers, add_remove_data_receiver
 
@@ -37,9 +37,15 @@ def display_owned_data():
                         else:
                             st.error("Wrong old name was written!")
             with desc:
-                new_desc = st.text_area(label="Change description", value=description,
-                                        key=f"change_data_desc_{str(data_id)}", height=280)
-                submit = st.button("Change Desc", key=f"chg_data_btn_{str(data_id)}")
+                new_desc = st.text_area(label="Change data description", value=description,
+                                        key=f"change_data_desc_{data_id}")
+                submit = st.button("Change description", key=f"data_desc_chg_btn_{data_id}")
+                if submit:
+                    if description != new_desc:
+                        change_data_data_description(data_id, new_desc)
+                        st.experimental_rerun()
+                    else:
+                        st.error("No changes made!")
             with deletion:
                 delete = st.button(label="Delete your droplet data", key="delete " + str(data_id))
                 sure = st.checkbox("I want to delete this droplet data permanently", key="sure" + str(data_id))

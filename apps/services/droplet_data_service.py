@@ -178,10 +178,11 @@ def rename_droplet_data(data_id, upload_time, old_name, new_name, data_type):
     path = get_save_path()
     old_path = f"{path + old_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
     new_path = f"{path + new_name}_{st.session_state['username']}_{str(upload_time)}.{data_type}"
-    os.rename(old_path, new_path)
-    query = f"UPDATE Analysis_data SET file_path='{new_path}', analysis_data_name='{new_name}' " \
+    query = "UPDATE Analysis_data SET file_path=%s, analysis_data_name=%s " \
             f"WHERE analysis_data_id={data_id};"
-    execute_query(query)
+    vals = [new_path, new_name]
+    execute_query(query, vals)
+    os.rename(old_path, new_path)
 
 
 def change_data_p_status(data_id: int):
@@ -193,3 +194,9 @@ def change_data_p_status(data_id: int):
     else:
         val = [1]
     execute_query(q_to_change_p, val)
+
+def change_data_data_description(data_id, new_desc):
+    query = "UPDATE Analysis_data SET analysis_data_description=%s " \
+            f"WHERE analysis_data_id={data_id};"
+    vals = [new_desc]
+    execute_query(query, vals)
